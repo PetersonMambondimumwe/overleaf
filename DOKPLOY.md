@@ -197,7 +197,7 @@ Building on a small VPS costs CPU, disk and a 5 GB base-image pull. If you
 prefer, build locally and push to a registry:
 
 ```bash
-docker build -f server-ce/Dockerfile.clerk -t ghcr.io/<you>/overleaf-clerk:latest .
+docker build -f Dockerfile -t ghcr.io/<you>/overleaf-clerk:latest .
 docker push ghcr.io/<you>/overleaf-clerk:latest
 ```
 
@@ -208,8 +208,7 @@ Then in `docker-compose.dokploy.yml` replace the whole `build:` block with:
 ```
 
 and add the registry under Dokploy → **Registry** (for private images). Deploys
-then only pull the small overlay layer. Keep the `server-ce/Dockerfile.clerk`
-file in the repo either way.
+then only pull the small overlay layer. The overlay `Dockerfile` at the repo root is the same file Dokploy would build.
 
 ## 10. Troubleshooting
 
@@ -242,7 +241,7 @@ Check `docker logs <project>-mongo-1`; a fresh `mongo_data` volume fixes a broke
 initialisation (destroys data).
 
 **Build fails with `COPY --parents`/syntax errors** — you are building
-`server-ce/Dockerfile` instead of `server-ce/Dockerfile.clerk`. Point the compose
+`server-ce/Dockerfile` (the full source build) instead of the root `Dockerfile` (the overlay). Point the compose
 file at the overlay; the full source build needs a newer `sharelatex-base` than
 the published image.
 

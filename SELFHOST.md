@@ -56,7 +56,7 @@ docker compose logs -f sharelatex
 ```
 
 The build is an **overlay** on the published release image
-(`server-ce/Dockerfile.clerk`): it copies the changed server files onto
+(`Dockerfile` at the repo root): it copies the changed server files onto
 `sharelatex/sharelatex:latest`, so it takes seconds. The first run still has to
 download that image (~5 GB). To pick up a new Overleaf release later, bump
 `OVERLEAF_IMAGE_TAG` (e.g. `OVERLEAF_IMAGE_TAG=2026-11-01`) and rebuild.

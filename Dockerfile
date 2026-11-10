@@ -1,10 +1,11 @@
-# Overlay image for the Clerk / Google sign-in changes.
+# Overleaf release image + this repo's Clerk / Google sign-in changes.
 #
-# The published release image already contains the compiled frontend, the Yarn
-# PnP dependency tree and TeX Live, so there is nothing to rebuild here: we only
-# replace the handful of server files that changed. This keeps the deployment
-# fast (seconds instead of the ~40 minute full source build, which additionally
-# needs a newer sharelatex-base image than :latest ships).
+# This is an *overlay*: the published release image already contains the
+# compiled frontend, the Yarn PnP dependency tree and TeX Live, so only the
+# handful of server files that changed are replaced. The build takes seconds.
+#
+# It lives at the repository root so that build platforms which default to
+# `Dockerfile` (Dokploy, plain `docker build .`) work without extra settings.
 #
 # Bump OVERLEAF_RELEASE_TAG to pick up a new Overleaf release.
 ARG OVERLEAF_RELEASE_TAG=latest

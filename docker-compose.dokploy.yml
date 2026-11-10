@@ -25,7 +25,7 @@ services:
     image: ${OVERLEAF_IMAGE:-overleaf-clerk:local}
     build:
       context: .
-      dockerfile: server-ce/Dockerfile.clerk
+      dockerfile: Dockerfile
       args:
         OVERLEAF_RELEASE_TAG: ${OVERLEAF_IMAGE_TAG:-latest}
     depends_on:
