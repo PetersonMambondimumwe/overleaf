@@ -1,0 +1,104 @@
+# Overleaf + Clerk on Dokploy (Docker Compose service)
+#
+# Dokploy clones the repo, writes the variables from its Environment tab to a
+# .env file next to this file, then runs:
+#
+#   docker compose -p <app> -f docker-compose.dokploy.yml up -d --build
+#
+# Differences from docker-compose.yml (local):
+#   - no container_name      (Dokploy needs to own container naming)
+#   - no published host port (Dokploy's Traefik routes to port 80 of `sharelatex`)
+#   - explicit healthcheck
+#
+# Set at minimum in Dokploy -> Environment:
+#   OVERLEAF_SITE_URL=https://overleaf.example.com
+#   OVERLEAF_INVITE_TOKEN_SECRET=<openssl rand -base64 32>
+#   OVERLEAF_ADMIN_EMAIL=you@example.com
+#   OVERLEAF_CLERK_ENABLED=true
+#   OVERLEAF_CLERK_PUBLISHABLE_KEY=pk_live_...
+#   OVERLEAF_CLERK_SECRET_KEY=sk_live_...
+#   OVERLEAF_CLERK_ALLOWED_DOMAINS=tuks.co.za
+
+services:
+  sharelatex:
+    restart: always
+    image: ${OVERLEAF_IMAGE:-overleaf-clerk:local}
+    build:
+      context: .
+      dockerfile: server-ce/Dockerfile.clerk
+      args:
+        OVERLEAF_RELEASE_TAG: ${OVERLEAF_IMAGE_TAG:-latest}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    # Internal port only; Dokploy's domain points at this service + port 80.
+    expose:
+      - "80"
+    stop_grace_period: 60s
+    healthcheck:
+      # /login is served by nginx once the web app is actually up (it returns
+      # 502 until then, which fails the check).
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    volumes:
+      - sharelatex_data:/var/lib/overleaf
+    environment:
+      # ---- Site identity ------------------------------------------------
+      OVERLEAF_APP_NAME: ${OVERLEAF_APP_NAME:-Overleaf}
+      OVERLEAF_SITE_URL: ${OVERLEAF_SITE_URL:?Set OVERLEAF_SITE_URL in Dokploy}
+      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL:-}
+
+      # ---- Required secret ----------------------------------------------
+      OVERLEAF_INVITE_TOKEN_SECRET: ${OVERLEAF_INVITE_TOKEN_SECRET:?Set OVERLEAF_INVITE_TOKEN_SECRET in Dokploy}
+
+      # ---- Backing services ---------------------------------------------
+      OVERLEAF_MONGO_URL: mongodb://mongo/sharelatex
+      OVERLEAF_REDIS_HOST: redis
+      REDIS_HOST: redis
+
+      # ---- Features -----------------------------------------------------
+      ENABLED_LINKED_FILE_TYPES: "project_file,project_output_file"
+      ENABLE_CONVERSIONS: "true"
+      EMAIL_CONFIRMATION_DISABLED: "true"
+
+      # ---- Google sign-in via Clerk -------------------------------------
+      OVERLEAF_CLERK_ENABLED: ${OVERLEAF_CLERK_ENABLED:-false}
+      OVERLEAF_CLERK_PUBLISHABLE_KEY: ${OVERLEAF_CLERK_PUBLISHABLE_KEY:-}
+      OVERLEAF_CLERK_SECRET_KEY: ${OVERLEAF_CLERK_SECRET_KEY:-}
+      OVERLEAF_CLERK_ALLOWED_DOMAINS: ${OVERLEAF_CLERK_ALLOWED_DOMAINS:-}
+      OVERLEAF_CLERK_FRONTEND_API: ${OVERLEAF_CLERK_FRONTEND_API:-}
+
+  mongo:
+    restart: always
+    image: mongo:8.0
+    command: "--replSet overleaf"
+    volumes:
+      - mongo_data:/data/db
+      - ./bin/shared/mongodb-init-replica-set.js:/docker-entrypoint-initdb.d/mongodb-init-replica-set.js
+    environment:
+      MONGO_INITDB_DATABASE: sharelatex
+    extra_hosts:
+      - mongo:127.0.0.1
+    healthcheck:
+      test: echo 'db.stats().ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    restart: always
+    image: redis:6.2
+    volumes:
+      - redis_data:/data
+
+volumes:
+  # Named volumes survive redeploys. Back them up with Dokploy's Volume Backups
+  # or the commands in DOKPLOY.md.
+  sharelatex_data:
+  mongo_data:
+  redis_data:

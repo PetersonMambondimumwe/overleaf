@@ -5,6 +5,10 @@ This repository runs **Overleaf Community Edition** behind Docker Compose: one
 configured through `.env`, and all persistent data lives in Docker named
 volumes (`sharelatex_data`, `mongo_data`, `redis_data`).
 
+> Deploying with **Dokploy**? Use [DOKPLOY.md](DOKPLOY.md) and
+> `docker-compose.dokploy.yml` instead of this file — same stack, no published
+> host port, Traefik/Let's Encrypt handled by Dokploy.
+
 > **Community Edition is for trusted users.** It has no sandboxed compiles: a
 > LaTeX compile can read and write anything the `sharelatex` container can.
 > Do not open a public CE instance to untrusted users.

@@ -1,24 +1,28 @@
-# syntax=docker/dockerfile:1-labs
-#
 # Overlay image for the Clerk / Google sign-in changes.
 #
-# The published release image already contains the compiled frontend, the
-# Yarn PnP dependency tree and TeX Live, so there is nothing to rebuild here:
-# we only replace the handful of server files that changed. This keeps the
-# deployment fast (seconds instead of the ~40 minute full source build, which
-# additionally needs a newer sharelatex-base image than :latest).
+# The published release image already contains the compiled frontend, the Yarn
+# PnP dependency tree and TeX Live, so there is nothing to rebuild here: we only
+# replace the handful of server files that changed. This keeps the deployment
+# fast (seconds instead of the ~40 minute full source build, which additionally
+# needs a newer sharelatex-base image than :latest ships).
 #
-# Bump the base tag to pick up a new Overleaf release.
-
+# Bump OVERLEAF_RELEASE_TAG to pick up a new Overleaf release.
 ARG OVERLEAF_RELEASE_TAG=latest
 FROM sharelatex/sharelatex:${OVERLEAF_RELEASE_TAG}
 
 WORKDIR /overleaf
 
-COPY --parents \
-  services/web/app/src/Features/Authentication/ClerkController.mjs \
-  services/web/app/src/Features/User/UserPagesController.mjs \
-  services/web/app/src/router.mjs \
-  services/web/app/views/user/login-clerk.pug \
-  services/web/config/settings.defaults.js \
-  /overleaf/
+COPY services/web/app/src/Features/Authentication/ClerkController.mjs \
+     services/web/app/src/Features/Authentication/
+
+COPY services/web/app/src/Features/User/UserPagesController.mjs \
+     services/web/app/src/Features/User/
+
+COPY services/web/app/src/router.mjs \
+     services/web/app/src/
+
+COPY services/web/app/views/user/login-clerk.pug \
+     services/web/app/views/user/
+
+COPY services/web/config/settings.defaults.js \
+     services/web/config/
