@@ -1,9 +1,16 @@
-# Overleaf Community Edition — self-hosted deployment
+# Overleaf Community Edition — LOCAL / plain Docker deployment
+#
+# Publishes port 80 on the host, so it is meant for a machine where you control
+# the ports (your laptop or a bare server).
+#
+#   docker compose up -d
+#
+# IMPORTANT: on Dokploy (or any host where Traefik/nginx already owns port 80)
+# use docker-compose.dokploy.yml instead — see DOKPLOY.md. This file will fail
+# with "Bind for 0.0.0.0:80 failed: port is already allocated" there.
 #
 # All site-specific settings live in .env (copy .env.example to .env).
 # Deployment guide: SELFHOST.md
-#
-#   docker compose up -d
 
 name: overleaf
 

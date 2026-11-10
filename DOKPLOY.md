@@ -216,9 +216,11 @@ then only pull the small overlay layer. The overlay `Dockerfile` at the repo roo
 Check `docker compose logs -f sharelatex` (or Dokploy logs); first start can take
 5 minutes. The healthcheck stays `starting` until `/login` answers.
 
-**"port is already allocated"** — you kept `ports: - "80:80"` from the local
-compose. In Dokploy the `sharelatex` service must not publish port 80; use
-`docker-compose.dokploy.yml` as-is.
+**`Bind for 0.0.0.0:80 failed: port is already allocated`** — Dokploy is building
+the wrong file. Look at the `Command:` line in the deployment log: it must say
+`-f ./docker-compose.dokploy.yml`. If it says `-f ./docker-compose.yml`, set
+**General → Compose Path** to `docker-compose.dokploy.yml` and redeploy. The
+local file publishes host port 80, which Traefik already owns.
 
 **Login redirects in a loop / session not kept** — `OVERLEAF_SITE_URL` does not
 match the browser URL exactly (scheme, host, port). Fix it and redeploy; also
