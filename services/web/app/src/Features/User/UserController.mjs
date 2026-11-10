@@ -4,6 +4,7 @@ import UserGetter from './UserGetter.mjs'
 import { User } from '../../models/User.mjs'
 import logger from '@overleaf/logger'
 import metrics from '@overleaf/metrics'
+import Settings from '@overleaf/settings'
 import AuthenticationManager from '../Authentication/AuthenticationManager.mjs'
 import SessionManager from '../Authentication/SessionManager.mjs'
 import Features from '../../infrastructure/Features.mjs'
@@ -632,7 +633,9 @@ async function logout(req, res, next) {
   const requestedRedirect = body.redirect
     ? UrlHelper.getSafeRedirectPath(body.redirect)
     : undefined
-  const redirectUrl = requestedRedirect || '/login'
+  const redirectUrl =
+    requestedRedirect ||
+    (Settings.clerk?.enabled ? '/login?logged_out=1' : '/login')
 
   await doLogout(req)
 

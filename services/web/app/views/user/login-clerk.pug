@@ -368,9 +368,30 @@ block append foot-scripts
 				})
 			}
 
+			var signedOut =
+				new URLSearchParams(window.location.search).get('logged_out') === '1'
+
 			loadScript('https://' + frontendApi + '/npm/@clerk/clerk-js@5/dist/clerk.browser.js')
 				.then(function () { return window.Clerk.load() })
-				.then(function () {
+				.then(async function () {
+					if (signedOut) {
+						// The Overleaf session has just been destroyed. End the Clerk
+						// session as well, otherwise /login would immediately bridge the
+						// still-active Clerk session and sign the user back in.
+						history.replaceState(null, '', window.location.pathname)
+						if (window.Clerk.session) {
+							try {
+								await window.Clerk.signOut({
+									redirectUrl: window.location.origin + '/login'
+								})
+							} catch (e) {
+								// fall through and show the signed-out page anyway
+							}
+						}
+						showStatus('You have been signed out.')
+						render()
+						return
+					}
 					if (window.Clerk.session) {
 						bridge(window.Clerk.session)
 						return
@@ -379,7 +400,6 @@ block append foot-scripts
 					window.Clerk.addListener(function (resources) {
 						if (resources.session) bridge(resources.session)
 					})
-					window.addEventListener('hashchange', render)
 				})
 				.catch(function () {
 					showError('Could not reach the sign-in service. Check your connection and reload the page.')

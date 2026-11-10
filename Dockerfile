@@ -19,6 +19,9 @@ COPY services/web/app/src/Features/Authentication/ClerkController.mjs \
 COPY services/web/app/src/Features/User/UserPagesController.mjs \
      services/web/app/src/Features/User/
 
+COPY services/web/app/src/Features/User/UserController.mjs \
+     services/web/app/src/Features/User/
+
 COPY services/web/app/src/router.mjs \
      services/web/app/src/
 

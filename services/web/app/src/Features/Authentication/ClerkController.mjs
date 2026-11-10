@@ -195,7 +195,7 @@ async function findOrCreateUser({ email, firstName, lastName, clerkUserId }) {
       $addToSet: {
         thirdPartyIdentifiers: {
           providerId: 'clerk',
-          externalId: clerkUserId,
+          externalUserId: clerkUserId,
         },
       },
     }
