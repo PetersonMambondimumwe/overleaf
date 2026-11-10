@@ -788,6 +788,22 @@ module.exports = {
     ? JSON.parse(process.env.ADMIN_DOMAINS)
     : undefined,
 
+  // Authentication via Clerk (Google sign-in).
+  // Clerk authenticates the user; Overleaf still owns the session.
+  clerk: {
+    enabled: process.env.OVERLEAF_CLERK_ENABLED === 'true',
+    publishableKey: process.env.OVERLEAF_CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.OVERLEAF_CLERK_SECRET_KEY,
+    // Optional override for the Frontend API host, otherwise derived from the
+    // publishable key.
+    frontendApi: process.env.OVERLEAF_CLERK_FRONTEND_API,
+    // Empty list = allow every verified Google address.
+    allowedEmailDomains: (process.env.OVERLEAF_CLERK_ALLOWED_DOMAINS || '')
+      .split(',')
+      .map(domain => domain.trim().toLowerCase())
+      .filter(Boolean),
+  },
+
   nav: {
     title: process.env.APP_NAME || 'Overleaf Community Edition',
 

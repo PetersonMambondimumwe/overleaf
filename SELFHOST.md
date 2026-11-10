@@ -39,16 +39,21 @@ Edit `.env`:
 - `OVERLEAF_INVITE_TOKEN_SECRET` — generate with
   `openssl rand -base64 32`. On Windows PowerShell:
   `$b = [byte[]]::new(32); [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)`
+- `OVERLEAF_CLERK_*` — Google sign-in; see §3.
 
 `.env` is git-ignored — keep the real secret out of git.
 
 ## 3. Run
 
 ```bash
-docker compose up -d          # start
-docker compose ps             # wait until sharelatex is "running"
+docker compose up -d --build   # build the image from this repo and start
+docker compose ps
 docker compose logs -f sharelatex
 ```
+
+The first build compiles the frontend and installs TeX Live in the base image,
+so expect 20–40 minutes and several GB of disk. Later code changes only need
+`docker compose up -d --build` again (layer cache keeps it fast).
 
 Open the URL from `OVERLEAF_SITE_URL` (locally <http://localhost>). First
 start-up takes a few minutes while the container initialises MongoDB and
@@ -94,6 +99,71 @@ docker exec sharelatex grep -o 'http://[^"]*passwordResetToken=[^"]*' \
 docker exec mongo mongosh sharelatex --quiet \
   --eval 'db.users.updateOne({email:"you@example.com"},{$set:{isAdmin:true}})'
 ```
+
+### Google sign-in with Clerk
+
+`/login` renders a redesigned sign-in page backed by
+[Clerk](https://clerk.com): the user authenticates with their Google account,
+Clerk verifies the identity, and Overleaf then issues its own normal session
+(`POST /auth/clerk` → `AuthenticationController.finishLogin`). No other part of
+Overleaf changes: projects, editor and real-time services still use the
+Overleaf session cookie.
+
+Password login remains available at `/login/classic`, so a Clerk or Google
+outage cannot lock the administrator out.
+
+**1. Enable Google in Clerk.** In the Clerk Dashboard, open the application →
+*User & Authentication* → *Social Connections* and enable **Google** (for
+production, supply your own Google OAuth client; the development instance can
+use Clerk's shared credentials).
+
+**2. Link the CLI and pull the keys.**
+
+```bash
+npx -y clerk@latest auth login          # once, in your own terminal
+npx -y clerk@latest link --app <app_id>
+npx -y clerk@latest env pull --file .env.clerk
+```
+
+Copy the two values into `.env` (never commit them):
+
+```dotenv
+OVERLEAF_CLERK_ENABLED=true
+OVERLEAF_CLERK_PUBLISHABLE_KEY=pk_test_...
+OVERLEAF_CLERK_SECRET_KEY=sk_test_...
+OVERLEAF_CLERK_ALLOWED_DOMAINS=tuks.co.za
+```
+
+**3. Rebuild and restart.**
+
+```bash
+docker compose up -d --build
+```
+
+**Policy.** `OVERLEAF_CLERK_ALLOWED_DOMAINS` is a comma-separated allowlist: a
+verified Google address on one of those domains gets an Overleaf account on
+first sign-in; everyone else is rejected with a message. Leave it empty to
+accept any verified Google address. New accounts are ordinary Overleaf users
+(no admin rights).
+
+**Existing accounts.** Users created earlier (including the password admin)
+keep working. Signing in with Google links to the account with the same email
+address.
+
+| Variable | Purpose |
+|---|---|
+| `OVERLEAF_CLERK_ENABLED` | `true` switches `/login` to the Clerk page |
+| `OVERLEAF_CLERK_PUBLISHABLE_KEY` | Public key, embedded in the page |
+| `OVERLEAF_CLERK_SECRET_KEY` | Server-side key, verifies sessions and reads users |
+| `OVERLEAF_CLERK_ALLOWED_DOMAINS` | Comma-separated email-domain allowlist |
+| `OVERLEAF_CLERK_FRONTEND_API` | Optional override of the Clerk Frontend API host |
+
+**Troubleshooting.** *“Google sign-in is not configured”* — the keys are
+missing or blank in `.env`; rebuild is not required, `docker compose up -d`
+recreates the container with the new values. *No Google button* — the Google
+social connection is not enabled for that Clerk application. *“Only
+@tuks.co.za accounts…”* — the signed-in Google address is outside the
+allowlist; sign out of Clerk and use the right account.
 
 
 ## 4. Put it on the internet
@@ -245,13 +315,18 @@ docker exec sharelatex tail -n 20 /var/log/overleaf/web.log
 in this guide is versioned:
 
 ```bash
-git add docker-compose.yml .env.example .gitignore SELFHOST.md
-git commit -m "Add self-hosted Overleaf deployment"
+git add docker-compose.yml .env.example .gitignore .dockerignore SELFHOST.md \
+  services/web/app/src/Features/Authentication/ClerkController.mjs \
+  services/web/app/src/Features/User/UserPagesController.mjs \
+  services/web/app/src/router.mjs \
+  services/web/app/views/user/login-clerk.pug \
+  services/web/config/settings.defaults.js
+git commit -m "Add Google sign-in via Clerk"
 git push origin main
 ```
 
 On the server: `git clone`, `cp .env.example .env`, edit `.env`, then
-`docker compose up -d`.
+`docker compose up -d --build`.
 
-Changing the site name or public URL later only needs `.env` plus
-`docker compose up -d` — no rebuild.
+Changing the site name, public URL, Clerk keys or the domain allowlist only
+needs `.env` plus `docker compose up -d` — no rebuild.

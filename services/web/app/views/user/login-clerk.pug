@@ -1,0 +1,349 @@
+extends ../layout-website-redesign
+
+block vars
+	- isWebsiteRedesign = true
+
+block append css
+	style.
+		.ol-clerk-page {
+			padding: 40px 16px 64px;
+			background: radial-gradient(1200px 600px at 10% -10%, #eaf5ee 0%, #f6f8f7 55%, #ffffff 100%);
+		}
+		.ol-clerk {
+			display: flex;
+			max-width: 1040px;
+			margin: 0 auto;
+			min-height: 560px;
+			background: #ffffff;
+			border: 1px solid #e3e8e4;
+			border-radius: 18px;
+			overflow: hidden;
+			box-shadow: 0 24px 70px rgba(15, 61, 38, 0.12);
+		}
+		.ol-clerk__brand {
+			flex: 1 1 46%;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			gap: 48px;
+			padding: 48px 44px;
+			color: #ffffff;
+			background:
+				radial-gradient(600px 300px at 90% 0%, rgba(255, 255, 255, 0.14), transparent 60%),
+				linear-gradient(155deg, #0b3d24 0%, #116033 45%, #178a45 100%);
+		}
+		.ol-clerk__wordmark {
+			font-size: 22px;
+			font-weight: 700;
+			letter-spacing: -0.02em;
+			margin-bottom: 56px;
+		}
+		.ol-clerk__headline {
+			font-size: 40px;
+			line-height: 1.1;
+			font-weight: 600;
+			letter-spacing: -0.025em;
+			margin: 0 0 20px;
+			color: #ffffff;
+		}
+		.ol-clerk__lede {
+			font-size: 15px;
+			line-height: 1.65;
+			color: rgba(255, 255, 255, 0.82);
+			max-width: 34ch;
+			margin: 0;
+		}
+		.ol-clerk__points {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: grid;
+			gap: 12px;
+			font-size: 14px;
+			color: rgba(255, 255, 255, 0.9);
+		}
+		.ol-clerk__points li {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		.ol-clerk__tick {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.16);
+			font-size: 11px;
+			flex: none;
+		}
+		.ol-clerk__panel {
+			flex: 1 1 54%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 48px 40px;
+			background: #ffffff;
+		}
+		.ol-clerk__card {
+			width: 100%;
+			max-width: 380px;
+		}
+		.ol-clerk__title {
+			font-size: 26px;
+			font-weight: 600;
+			letter-spacing: -0.02em;
+			margin: 0 0 6px;
+			color: #1b222c;
+		}
+		.ol-clerk__subtitle {
+			font-size: 14px;
+			line-height: 1.5;
+			color: #5c6b7a;
+			margin: 0 0 24px;
+		}
+		.ol-clerk__mount {
+			min-height: 220px;
+		}
+		.ol-clerk__status {
+			margin: 16px 0 0;
+			font-size: 14px;
+			color: #5c6b7a;
+		}
+		.ol-clerk__error {
+			margin: 16px 0 0;
+			padding: 12px 14px;
+			border-radius: 8px;
+			background: #fdf1f0;
+			border: 1px solid #f3c9c4;
+			color: #8a2c22;
+			font-size: 13px;
+			line-height: 1.45;
+		}
+		.ol-clerk__alt {
+			margin: 22px 0 0;
+			font-size: 13px;
+			color: #5c6b7a;
+		}
+		.ol-clerk__alt a {
+			color: #116033;
+			font-weight: 600;
+		}
+		.ol-clerk__legal {
+			margin: 18px 0 0;
+			font-size: 12px;
+			line-height: 1.5;
+			color: #8b97a3;
+		}
+		.ol-clerk__mount .cl-card {
+			box-shadow: none;
+			border: 0;
+			padding: 0;
+			background: transparent;
+		}
+		@media (max-width: 860px) {
+			.ol-clerk {
+				flex-direction: column;
+				min-height: 0;
+			}
+			.ol-clerk__brand {
+				padding: 32px 28px;
+				gap: 28px;
+			}
+			.ol-clerk__wordmark {
+				margin-bottom: 20px;
+			}
+			.ol-clerk__headline {
+				font-size: 30px;
+			}
+			.ol-clerk__points {
+				display: none;
+			}
+			.ol-clerk__panel {
+				padding: 32px 24px 40px;
+			}
+		}
+		@media (max-width: 520px) {
+			.ol-clerk-page {
+				padding: 16px 8px 40px;
+			}
+			.ol-clerk {
+				border-radius: 12px;
+			}
+		}
+
+block content
+	main#main-content.content.ol-clerk-page
+		.ol-clerk
+			aside.ol-clerk__brand
+				div
+					.ol-clerk__wordmark Overleaf
+					h1.ol-clerk__headline
+						| Write together.
+						br
+						| Publish with confidence.
+					p.ol-clerk__lede
+						| A shared LaTeX workspace for your whole team: real-time
+						| collaboration, version history and one-click PDF builds.
+				ul.ol-clerk__points
+					li
+						span.ol-clerk__tick ✓
+						| Compile in the browser, nothing to install
+					li
+						span.ol-clerk__tick ✓
+						| Projects stay on this server
+					li
+						span.ol-clerk__tick ✓
+						| Sign in with your university Google account
+			section.ol-clerk__panel
+				.ol-clerk__card
+					h2.ol-clerk__title Sign in
+					p.ol-clerk__subtitle
+						| Use your #{clerk.allowedEmailDomains.length ? clerk.allowedEmailDomains.map(function (domain) { return '@' + domain }).join(' or ') : 'Google'} account to continue.
+					#clerk-signin.ol-clerk__mount(
+						data-publishable-key=clerk.publishableKey || ''
+						data-frontend-api=clerk.frontendApi || ''
+						data-csrf=csrfToken
+					)
+					p#clerk-status.ol-clerk__status(hidden)
+						| Signing you in…
+					#clerk-error.ol-clerk__error(role='alert' hidden)
+					p.ol-clerk__alt
+						| Signing in with a password instead?
+						|
+						a(href='/login/classic') Admin login
+					p.ol-clerk__legal
+						| By continuing you agree to the terms of use of this
+						| self-hosted Overleaf instance.
+
+block append foot-scripts
+	script(nonce=scriptNonce).
+		(function () {
+			var mount = document.getElementById('clerk-signin')
+			if (!mount) return
+			var status = document.getElementById('clerk-status')
+			var errorBox = document.getElementById('clerk-error')
+			var publishableKey = mount.getAttribute('data-publishable-key')
+			var frontendApi = mount.getAttribute('data-frontend-api')
+			var csrf = mount.getAttribute('data-csrf')
+			var signInUrl = window.location.origin + '/login'
+			var signUpUrl = window.location.origin + '/login#/sign-up'
+			var bridged = false
+
+			function showError(text) {
+				errorBox.textContent = text
+				errorBox.hidden = false
+				status.hidden = true
+			}
+
+			function showStatus(text) {
+				status.textContent = text
+				status.hidden = false
+			}
+
+			if (!publishableKey || !frontendApi) {
+				showError('Google sign-in is not configured on this instance yet. Use the admin login link below, or ask the administrator to finish the Clerk setup.')
+				mount.hidden = true
+				return
+			}
+
+			var appearance = {
+				variables: {
+					colorPrimary: '#116033',
+					colorText: '#1b222c',
+					colorTextSecondary: '#5c6b7a',
+					colorBackground: '#ffffff',
+					colorInputBackground: '#ffffff',
+					colorInputText: '#1b222c',
+					borderRadius: '8px',
+					fontFamily: 'inherit',
+					fontSize: '15px'
+				},
+				elements: {
+					card: 'ol-clerk-card',
+					headerTitle: 'ol-clerk-card__title',
+					headerSubtitle: 'ol-clerk-card__subtitle',
+					socialButtonsBlockButton: 'ol-clerk-google',
+					formButtonPrimary: 'ol-clerk-primary'
+				}
+			}
+
+			function bridge(session) {
+				if (bridged) return
+				bridged = true
+				showStatus('Signing you in…')
+				session.getToken().then(function (token) {
+					return fetch('/auth/clerk', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+							'Accept': 'application/json'
+						},
+						body: new URLSearchParams({ _csrf: csrf, token: token })
+					})
+				}).then(function (response) {
+					return response.json().catch(function () { return {} }).then(function (data) {
+						if (response.ok && data.redir) {
+							window.location.assign(data.redir)
+							return
+						}
+						bridged = false
+						showError((data.message && data.message.text) || 'Sign-in failed. Please try again.')
+					})
+				}).catch(function () {
+					bridged = false
+					showError('Sign-in failed. Please try again.')
+				})
+			}
+
+			function unmount() {
+				try { window.Clerk.unmountSignIn(mount) } catch (e) {}
+				try { window.Clerk.unmountSignUp(mount) } catch (e) {}
+				mount.innerHTML = ''
+			}
+
+			function render() {
+				unmount()
+				if (window.location.hash === '#/sign-up') {
+					window.Clerk.mountSignUp(mount, {
+						appearance: appearance,
+						signInUrl: signInUrl
+					})
+				} else {
+					window.Clerk.mountSignIn(mount, {
+						appearance: appearance,
+						signUpUrl: signUpUrl
+					})
+				}
+			}
+
+			function loadScript(src) {
+				return new Promise(function (resolve, reject) {
+					var script = document.createElement('script')
+					script.src = src
+					script.async = true
+					script.crossOrigin = 'anonymous'
+					script.onload = resolve
+					script.onerror = function () { reject(new Error('Failed to load Clerk.js')) }
+					document.head.appendChild(script)
+				})
+			}
+
+			loadScript('https://' + frontendApi + '/npm/@clerk/clerk-js@5/dist/clerk.browser.js')
+				.then(function () { return window.Clerk.load({ publishableKey: publishableKey }) })
+				.then(function () {
+					if (window.Clerk.session) {
+						bridge(window.Clerk.session)
+						return
+					}
+					render()
+					window.Clerk.addListener(function (resources) {
+						if (resources.session) bridge(resources.session)
+					})
+					window.addEventListener('hashchange', render)
+				})
+				.catch(function () {
+					showError('Could not reach the sign-in service. Check your connection and reload the page.')
+				})
+		})()

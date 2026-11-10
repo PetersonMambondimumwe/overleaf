@@ -10,7 +10,12 @@ name: overleaf
 services:
   sharelatex:
     restart: always
-    image: sharelatex/sharelatex:${OVERLEAF_IMAGE_TAG:-latest}
+    # Built from this repo so the Clerk sign-in page and session bridge are
+    # included. `docker compose up -d --build` rebuilds after a code change.
+    image: ${OVERLEAF_IMAGE:-overleaf-clerk:local}
+    build:
+      context: .
+      dockerfile: server-ce/Dockerfile
     container_name: sharelatex
     depends_on:
       mongo:
@@ -51,6 +56,16 @@ services:
 
       # Disables email confirmation requirement
       EMAIL_CONFIRMATION_DISABLED: "true"
+
+      # ---- Google sign-in via Clerk ----------------------------------------
+      # /login renders the Clerk sign-in page; /login/classic stays available
+      # for password login as an admin fallback.
+      OVERLEAF_CLERK_ENABLED: ${OVERLEAF_CLERK_ENABLED:-false}
+      OVERLEAF_CLERK_PUBLISHABLE_KEY: ${OVERLEAF_CLERK_PUBLISHABLE_KEY:-}
+      OVERLEAF_CLERK_SECRET_KEY: ${OVERLEAF_CLERK_SECRET_KEY:-}
+      OVERLEAF_CLERK_ALLOWED_DOMAINS: ${OVERLEAF_CLERK_ALLOWED_DOMAINS:-}
+      # Optional, only needed when the publishable key is not the classic format.
+      OVERLEAF_CLERK_FRONTEND_API: ${OVERLEAF_CLERK_FRONTEND_API:-}
 
       # ---- Outgoing email (optional) --------------------------------------
       # Set these in .env; without SMTP, emails are written to the container log.

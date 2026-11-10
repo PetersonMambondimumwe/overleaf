@@ -13,6 +13,7 @@ import UploadsRouter from './Features/Uploads/UploadsRouter.mjs'
 import metrics from '@overleaf/metrics'
 import ReferalController from './Features/Referal/ReferalController.mjs'
 import AuthenticationController from './Features/Authentication/AuthenticationController.mjs'
+import ClerkController from './Features/Authentication/ClerkController.mjs'
 import PermissionsController from './Features/Authorization/PermissionsController.mjs'
 import SessionManager from './Features/Authentication/SessionManager.mjs'
 import TagsController from './Features/Tags/TagsController.mjs'
@@ -250,6 +251,18 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
 
   webRouter.get('/login', UserPagesController.loginPage)
   AuthenticationController.addEndpointToLoginWhitelist('/login')
+
+  // Password login, kept as an admin fallback next to Google sign-in.
+  webRouter.get('/login/classic', UserPagesController.classicLoginPage)
+  AuthenticationController.addEndpointToLoginWhitelist('/login/classic')
+
+  // Clerk session bridge: verified Clerk token in, regular Overleaf session out.
+  webRouter.post(
+    '/auth/clerk',
+    RateLimiterMiddleware.rateLimit(overleafLoginRateLimiter),
+    ClerkController.login
+  )
+  AuthenticationController.addEndpointToLoginWhitelist('/auth/clerk')
 
   webRouter.post(
     '/login',

@@ -4,6 +4,7 @@ import UserSessionsManager from './UserSessionsManager.mjs'
 import logger from '@overleaf/logger'
 import Settings from '@overleaf/settings'
 import AuthenticationController from '../Authentication/AuthenticationController.mjs'
+import ClerkController from '../Authentication/ClerkController.mjs'
 import SessionManager from '../Authentication/SessionManager.mjs'
 import SubscriptionLocator from '../Subscription/SubscriptionLocator.mjs'
 import _ from 'lodash'
@@ -23,6 +24,10 @@ function popSessionValue(session, key) {
     delete session[key]
   }
   return value
+}
+
+function clerkEnabled() {
+  return Boolean(Settings.clerk?.enabled)
 }
 
 const settingsPageSchema = z.object({
@@ -304,11 +309,45 @@ const UserPagesController = {
     if (Object.keys(getRawReqInput(req).query).length !== 0) {
       metadata.robotsNoindexNofollow = true
     }
-    res.render('user/login', {
+    const pageData = {
       title: Settings.nav?.login_support_title || 'login',
       login_support_title: Settings.nav?.login_support_title,
       login_support_text: Settings.nav?.login_support_text,
       metadata,
+    }
+    if (!clerkEnabled()) {
+      return res.render('user/login', pageData)
+    }
+    res.render('user/login-clerk', {
+      ...pageData,
+      title: 'Sign in',
+      clerk: {
+        publishableKey: Settings.clerk.publishableKey,
+        frontendApi:
+          Settings.clerk.frontendApi ||
+          ClerkController.frontendApiFromPublishableKey(
+            Settings.clerk.publishableKey
+          ),
+        allowedEmailDomains: Settings.clerk.allowedEmailDomains,
+      },
+    })
+  },
+
+  // Password login. Kept as an admin fallback when Google sign-in is enabled,
+  // so a Clerk/Google outage cannot lock the administrator out.
+  classicLoginPage(req, res) {
+    const { query } = parseReq(req, loginPageSchema, { logOnly: true })
+    if (
+      query.redir != null &&
+      AuthenticationController.getRedirectFromSession(req) == null
+    ) {
+      AuthenticationController.setRedirectInSession(req, query.redir)
+    }
+    res.render('user/login', {
+      title: Settings.nav?.login_support_title || 'login',
+      login_support_title: Settings.nav?.login_support_title,
+      login_support_text: Settings.nav?.login_support_text,
+      metadata: { robotsNoindexNofollow: true },
     })
   },
 
