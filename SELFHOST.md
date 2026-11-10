@@ -51,9 +51,16 @@ docker compose ps
 docker compose logs -f sharelatex
 ```
 
-The first build compiles the frontend and installs TeX Live in the base image,
-so expect 20–40 minutes and several GB of disk. Later code changes only need
-`docker compose up -d --build` again (layer cache keeps it fast).
+The build is an **overlay** on the published release image
+(`server-ce/Dockerfile.clerk`): it copies the changed server files onto
+`sharelatex/sharelatex:latest`, so it takes seconds. The first run still has to
+download that image (~5 GB). To pick up a new Overleaf release later, bump
+`OVERLEAF_IMAGE_TAG` (e.g. `OVERLEAF_IMAGE_TAG=2026-11-01`) and rebuild.
+
+> Why not build the full source? `server-ce/Dockerfile` expects a newer
+> `sharelatex/sharelatex-base` than the published `:latest` (which still ships
+> Node 16, while the release image runs Node 24). The overlay avoids that
+> mismatch and is what the compose file uses.
 
 Open the URL from `OVERLEAF_SITE_URL` (locally <http://localhost>). First
 start-up takes a few minutes while the container initialises MongoDB and

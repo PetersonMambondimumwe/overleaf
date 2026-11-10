@@ -10,12 +10,14 @@ name: overleaf
 services:
   sharelatex:
     restart: always
-    # Built from this repo so the Clerk sign-in page and session bridge are
-    # included. `docker compose up -d --build` rebuilds after a code change.
+    # Overlay image: the release image plus this repo's Clerk sign-in changes.
+    # `docker compose up -d --build` rebuilds in seconds after a code change.
     image: ${OVERLEAF_IMAGE:-overleaf-clerk:local}
     build:
       context: .
-      dockerfile: server-ce/Dockerfile
+      dockerfile: server-ce/Dockerfile.clerk
+      args:
+        OVERLEAF_RELEASE_TAG: ${OVERLEAF_IMAGE_TAG:-latest}
     container_name: sharelatex
     depends_on:
       mongo:

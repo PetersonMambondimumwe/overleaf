@@ -2,6 +2,7 @@ extends ../layout-website-redesign
 
 block vars
 	- isWebsiteRedesign = true
+	- suppressNavbar = true
 
 block append css
 	style.
@@ -39,12 +40,13 @@ block append css
 			margin-bottom: 56px;
 		}
 		.ol-clerk__headline {
-			font-size: 40px;
-			line-height: 1.1;
+			font-size: 34px;
+			line-height: 1.15;
 			font-weight: 600;
-			letter-spacing: -0.025em;
+			letter-spacing: -0.02em;
 			margin: 0 0 20px;
 			color: #ffffff;
+			text-wrap: balance;
 		}
 		.ol-clerk__lede {
 			font-size: 15px;
@@ -88,7 +90,7 @@ block append css
 		}
 		.ol-clerk__card {
 			width: 100%;
-			max-width: 380px;
+			max-width: 420px;
 		}
 		.ol-clerk__title {
 			font-size: 26px;
@@ -105,6 +107,7 @@ block append css
 		}
 		.ol-clerk__mount {
 			min-height: 220px;
+			margin-top: 8px;
 		}
 		.ol-clerk__status {
 			margin: 16px 0 0;
@@ -137,10 +140,27 @@ block append css
 			color: #8b97a3;
 		}
 		.ol-clerk__mount .cl-card {
-			box-shadow: none;
-			border: 0;
-			padding: 0;
-			background: transparent;
+			box-shadow: none !important;
+			border: 0 !important;
+			padding: 0 !important;
+			background: transparent !important;
+			width: 100% !important;
+		}
+		/* Hide Clerk's own header: the page already has the "Sign in" heading. */
+		#clerk-signin .cl-header {
+			display: none !important;
+		}
+		#clerk-signin .cl-socialButtonsBlockButton {
+			height: 46px !important;
+			border-radius: 8px !important;
+			font-weight: 600 !important;
+		}
+		#clerk-signin .cl-footer {
+			font-size: 11px !important;
+			opacity: 0.75;
+		}
+		#clerk-signin .cl-formFieldInput {
+			border-radius: 8px !important;
 		}
 		@media (max-width: 860px) {
 			.ol-clerk {
@@ -257,15 +277,29 @@ block append foot-scripts
 					colorInputBackground: '#ffffff',
 					colorInputText: '#1b222c',
 					borderRadius: '8px',
-					fontFamily: 'inherit',
-					fontSize: '15px'
+					fontFamily: 'inherit'
 				},
 				elements: {
-					card: 'ol-clerk-card',
-					headerTitle: 'ol-clerk-card__title',
-					headerSubtitle: 'ol-clerk-card__subtitle',
-					socialButtonsBlockButton: 'ol-clerk-google',
-					formButtonPrimary: 'ol-clerk-primary'
+					card: {
+						backgroundColor: 'transparent',
+						boxShadow: 'none',
+						border: 'none',
+						padding: '0'
+					},
+					cardBox: {
+						boxShadow: 'none',
+						border: 'none',
+						borderRadius: '0',
+						overflow: 'visible'
+					},
+					header: { display: 'none' },
+					socialButtonsBlockButton: {
+						height: '46px',
+						borderRadius: '8px',
+						fontWeight: '600'
+					},
+					formFieldInput: { borderRadius: '8px' },
+					footer: { fontSize: '11px', opacity: '0.75' }
 				}
 			}
 
@@ -324,6 +358,10 @@ block append foot-scripts
 					script.src = src
 					script.async = true
 					script.crossOrigin = 'anonymous'
+					// clerk-js auto-initialises from this attribute; without it the
+					// bundle throws "Missing publishableKey" and never defines window.Clerk.
+					script.setAttribute('data-clerk-publishable-key', publishableKey)
+					script.setAttribute('data-clerk-frontend-api', frontendApi)
 					script.onload = resolve
 					script.onerror = function () { reject(new Error('Failed to load Clerk.js')) }
 					document.head.appendChild(script)
@@ -331,7 +369,7 @@ block append foot-scripts
 			}
 
 			loadScript('https://' + frontendApi + '/npm/@clerk/clerk-js@5/dist/clerk.browser.js')
-				.then(function () { return window.Clerk.load({ publishableKey: publishableKey }) })
+				.then(function () { return window.Clerk.load() })
 				.then(function () {
 					if (window.Clerk.session) {
 						bridge(window.Clerk.session)

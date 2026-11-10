@@ -4,3 +4,4 @@ docker-compose.override.yml
 
 # self-hosted runtime data (projects, uploads, mongo, redis)
 /data/
+.env.clerk
