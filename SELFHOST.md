@@ -176,6 +176,37 @@ social connection is not enabled for that Clerk application. *“Only
 @tuks.co.za accounts…”* — the signed-in Google address is outside the
 allowlist; sign out of Clerk and use the right account.
 
+### AI writing assistant (Anthropic Claude)
+
+When `ANTHROPIC_API_KEY` is set in `.env`, an **✦ AI Assist** button appears in the bottom-right corner of the editor (also toggled with `Alt+A`).
+
+It allows users to select LaTeX text in the editor and apply one of six actions:
+- **Fix grammar** (spelling, grammar, and punctuation)
+- **Improve clarity** (clearer sentence structure, same meaning)
+- **Academic tone** (formal journal style)
+- **Shorten** (reduces length by ~30%, preserving technical content and citations)
+- **Active voice** (converts passive voice to active voice)
+- **Summarise** (summarises into 2–4 sentences)
+
+The API key stays strictly server-side: the browser calls `POST /project/:id/ai/assist`, which validates authentication, project access, rate limits, and input size before calling Anthropic. The system prompt instructs Claude to strictly preserve LaTeX commands, math, environments, and citations.
+
+Configure in `.env`:
+
+```dotenv
+ANTHROPIC_API_KEY=sk-ant-...
+OVERLEAF_AI_MODEL=claude-3-5-haiku-latest
+# OVERLEAF_AI_MAX_INPUT_CHARS=6000
+# OVERLEAF_AI_MAX_OUTPUT_TOKENS=1024
+# OVERLEAF_AI_REQUESTS_PER_MINUTE=15
+```
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | *(empty)* | Enables the AI assistant when set |
+| `OVERLEAF_AI_MODEL` | `claude-3-5-haiku-latest` | Anthropic model identifier |
+| `OVERLEAF_AI_MAX_INPUT_CHARS` | `6000` | Max characters per user selection |
+| `OVERLEAF_AI_MAX_OUTPUT_TOKENS` | `1024` | Max tokens generated per completion |
+| `OVERLEAF_AI_REQUESTS_PER_MINUTE` | `15` | Per-user rate limit ceiling |
 
 ## 4. Put it on the internet
 

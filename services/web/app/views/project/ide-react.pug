@@ -24,6 +24,7 @@ block content
 
 block append meta
 	include editor/_meta
+	meta(name='ol-ai-assist' content=settings.ai && settings.ai.enabled ? 'enabled' : 'disabled')
 
 block prepend foot-scripts
 	script(
@@ -32,6 +33,15 @@ block prepend foot-scripts
 		src=(wsUrl || '/socket.io') + '/socket.io.js'
 		defer=deferScripts
 	)
+
+block append foot-scripts
+	if settings.ai && settings.ai.enabled
+		script(
+			type='text/javascript'
+			nonce=scriptNonce
+			src='/js/ai-assist.js'
+			defer=deferScripts
+		)
 
 block append head-scripts
 	include ./_mixpanel_autocapture.pug

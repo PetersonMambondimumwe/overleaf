@@ -3,7 +3,8 @@ coverage
 
 public/manifest.json
 
-public/js
+public/js/*
+!public/js/ai-assist.js
 public/minjs
 public/stylesheets
 public/fonts

@@ -804,6 +804,26 @@ module.exports = {
       .filter(Boolean),
   },
 
+  // AI writing assistant (Anthropic Claude), used from the editor.
+  ai: {
+    enabled: Boolean(process.env.ANTHROPIC_API_KEY),
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    // Fast, cost-effective Claude model for high-volume latency-sensitive tasks.
+    model: process.env.OVERLEAF_AI_MODEL || 'claude-3-5-haiku-latest',
+    maxInputChars: parseInt(
+      process.env.OVERLEAF_AI_MAX_INPUT_CHARS || '6000',
+      10
+    ),
+    maxOutputTokens: parseInt(
+      process.env.OVERLEAF_AI_MAX_OUTPUT_TOKENS || '1024',
+      10
+    ),
+    requestsPerMinute: parseInt(
+      process.env.OVERLEAF_AI_REQUESTS_PER_MINUTE || '15',
+      10
+    ),
+  },
+
   nav: {
     title: process.env.APP_NAME || 'Overleaf Community Edition',
 

@@ -14,6 +14,7 @@ import metrics from '@overleaf/metrics'
 import ReferalController from './Features/Referal/ReferalController.mjs'
 import AuthenticationController from './Features/Authentication/AuthenticationController.mjs'
 import ClerkController from './Features/Authentication/ClerkController.mjs'
+import AiAssistController from './Features/AI/AiAssistController.mjs'
 import PermissionsController from './Features/Authorization/PermissionsController.mjs'
 import SessionManager from './Features/Authentication/SessionManager.mjs'
 import TagsController from './Features/Tags/TagsController.mjs'
@@ -548,6 +549,15 @@ async function initialize(webRouter, privateApiRouter, publicApiRouter) {
     AuthenticationController.requireLogin(),
     AuthorizationMiddleware.ensureUserCanReadProject,
     ProjectController.projectEntitiesJson
+  )
+
+  // AI writing assistant, proxied to Anthropic server-side so the API key
+  // never reaches the browser.
+  webRouter.post(
+    '/project/:Project_id/ai/assist',
+    AuthenticationController.requireLogin(),
+    AuthorizationMiddleware.ensureUserCanReadProject,
+    AiAssistController.assist
   )
 
   // All project dashboard navigation states render the same page. The active

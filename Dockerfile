@@ -16,6 +16,9 @@ WORKDIR /overleaf
 COPY services/web/app/src/Features/Authentication/ClerkController.mjs \
      services/web/app/src/Features/Authentication/
 
+COPY services/web/app/src/Features/AI/AiAssistController.mjs \
+     services/web/app/src/Features/AI/
+
 COPY services/web/app/src/Features/User/UserPagesController.mjs \
      services/web/app/src/Features/User/
 
@@ -27,6 +30,12 @@ COPY services/web/app/src/router.mjs \
 
 COPY services/web/app/views/user/login-clerk.pug \
      services/web/app/views/user/
+
+COPY services/web/app/views/project/ide-react.pug \
+     services/web/app/views/project/
+
+COPY services/web/public/js/ai-assist.js \
+     services/web/public/js/
 
 COPY services/web/config/settings.defaults.js \
      services/web/config/

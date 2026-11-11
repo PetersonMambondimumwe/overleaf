@@ -68,6 +68,10 @@ OVERLEAF_CLERK_ENABLED=true
 OVERLEAF_CLERK_PUBLISHABLE_KEY=<pk_live_...>
 OVERLEAF_CLERK_SECRET_KEY=<sk_live_...>
 OVERLEAF_CLERK_ALLOWED_DOMAINS=tuks.co.za
+
+# Optional: AI writing assistant (Claude)
+# ANTHROPIC_API_KEY=sk-ant-...
+# OVERLEAF_AI_MODEL=claude-3-5-haiku-latest
 ```
 
 Dokploy writes these to `.env` next to the compose file, and the compose file
