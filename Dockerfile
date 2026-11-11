@@ -34,6 +34,9 @@ COPY services/web/app/views/user/login-clerk.pug \
 COPY services/web/app/views/project/ide-react.pug \
      services/web/app/views/project/
 
+COPY services/web/app/views/layout/thin-footer.pug \
+     services/web/app/views/layout/
+
 COPY services/web/public/js/ai-assist.js \
      services/web/public/js/
 

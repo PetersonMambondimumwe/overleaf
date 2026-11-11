@@ -830,11 +830,7 @@ module.exports = {
     hide_powered_by: process.env.NAV_HIDE_POWERED_BY === 'true',
     left_footer: [],
 
-    right_footer: [
-      {
-        text: '<a href="https://github.com/overleaf/overleaf">Fork on GitHub!</a>',
-      },
-    ],
+    right_footer: [],
 
     showSubscriptionLink: false,
 
