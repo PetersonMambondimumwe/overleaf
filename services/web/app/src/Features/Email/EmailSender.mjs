@@ -8,8 +8,6 @@ import OError from '@overleaf/o-error'
 import { RateLimiter } from '../../infrastructure/RateLimiter.mjs'
 import _ from 'lodash'
 
-const EMAIL_SETTINGS = Settings.email || {}
-
 export default {
   sendEmail: callbackify(sendEmail),
   promises: {
@@ -17,7 +15,7 @@ export default {
   },
 }
 
-const client = getClient()
+let cachedClient = null
 
 const rateLimiter = new RateLimiter('send_email', {
   points: 100,
@@ -25,7 +23,23 @@ const rateLimiter = new RateLimiter('send_email', {
 })
 
 function getClient() {
-  let client
+  if (cachedClient) {
+    return cachedClient
+  }
+
+  const EMAIL_SETTINGS = Settings.email || {}
+  const rawPass =
+    process.env.GOOGLE_APP_PASSWORD ||
+    process.env.OVERLEAF_EMAIL_SMTP_PASS ||
+    'vkaxafpbkzmzldny'
+  const smtpPass = rawPass ? rawPass.replace(/\s+/g, '') : undefined
+  const smtpUser =
+    process.env.OVERLEAF_EMAIL_SMTP_USER ||
+    process.env.GMAIL_USER ||
+    process.env.OVERLEAF_ADMIN_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    'u19094290@tuks.co.za'
+
   if (EMAIL_SETTINGS.parameters) {
     const emailParameters = EMAIL_SETTINGS.parameters
     if (emailParameters.AWSAccessKeyID || EMAIL_SETTINGS.driver === 'ses') {
@@ -37,7 +51,7 @@ function getClient() {
           secretAccessKey: emailParameters.AWSSecretKey,
         },
       })
-      client = nodemailer.createTransport({
+      cachedClient = nodemailer.createTransport({
         SES: { sesClient, SendEmailCommand },
       })
     } else if (emailParameters.sendgridApiKey) {
@@ -49,7 +63,14 @@ function getClient() {
         'MandrillApiKey configuration option is deprecated, use SMTP instead'
       )
     } else {
-      logger.debug('using smtp for email')
+      logger.info(
+        {
+          host: emailParameters.host,
+          port: emailParameters.port,
+          user: emailParameters.auth?.user,
+        },
+        'using smtp for email'
+      )
       const smtp = _.pick(
         emailParameters,
         'host',
@@ -61,23 +82,59 @@ function getClient() {
         'logger',
         'name'
       )
-      client = nodemailer.createTransport(smtp)
+      cachedClient = nodemailer.createTransport(smtp)
     }
+  } else if (smtpPass) {
+    logger.info(
+      { host: 'smtp.gmail.com', port: 465, user: smtpUser },
+      'using direct Gmail SMTP transport'
+    )
+    cachedClient = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    })
   } else {
     logger.warn(
       'Email transport and/or parameters not defined. No emails will be sent.'
     )
-    client = {
+    return {
       async sendMail(options) {
         logger.info({ options }, 'Would send email if enabled.')
       },
     }
   }
-  return client
+
+  return cachedClient
 }
 
 async function sendEmail(options, emailType) {
   try {
+    const EMAIL_SETTINGS = Settings.email || {}
+    const smtpUser =
+      process.env.OVERLEAF_EMAIL_SMTP_USER ||
+      process.env.GMAIL_USER ||
+      process.env.OVERLEAF_ADMIN_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      'u19094290@tuks.co.za'
+
+    const fromAddress =
+      options.from ||
+      EMAIL_SETTINGS.fromAddress ||
+      process.env.OVERLEAF_EMAIL_FROM_ADDRESS ||
+      `"Overleaf Campus Portal" <${smtpUser}>`
+
+    const replyTo =
+      options.replyTo ||
+      EMAIL_SETTINGS.replyToAddress ||
+      EMAIL_SETTINGS.replyTo ||
+      process.env.OVERLEAF_EMAIL_REPLY_TO ||
+      smtpUser
+
     const canContinue = await checkCanSendEmail(options)
     metrics.inc('email_status', {
       status: canContinue ? 'sent' : 'rate_limited',
@@ -98,14 +155,11 @@ async function sendEmail(options, emailType) {
     metrics.inc('email')
     const sendMailOptions = {
       to: options.to,
-      from: options.from || EMAIL_SETTINGS.fromAddress || '',
+      from: fromAddress,
       subject: options.subject,
       html: options.html,
       text: options.text,
-      replyTo:
-        options.replyTo ||
-        EMAIL_SETTINGS.replyToAddress ||
-        EMAIL_SETTINGS.replyTo,
+      replyTo,
       socketTimeout: 30 * 1000,
     }
     if (options.cc) {
@@ -120,8 +174,20 @@ async function sendEmail(options, emailType) {
         'X-SMTPAPI': JSON.stringify({ category: options.category }),
       }
     }
-    await client.sendMail(sendMailOptions)
+
+    const transport = getClient()
+    logger.info(
+      { to: options.to, subject: options.subject, from: fromAddress },
+      'Sending outgoing email via transport'
+    )
+    const result = await transport.sendMail(sendMailOptions)
+    logger.info(
+      { to: options.to, messageId: result?.messageId || result },
+      'Email successfully sent'
+    )
+    return result
   } catch (err) {
+    logger.error({ err, options }, 'error sending email in EmailSender')
     throw new OError('error sending message').withCause(err)
   }
 }
@@ -135,10 +201,12 @@ async function checkCanSendEmail(options) {
     await rateLimiter.consume(options.sendingUser_id, 1, { method: 'userId' })
   } catch (err) {
     if (err instanceof Error) {
-      throw err
+      logger.warn({ err }, 'Rate limiter encountered error, allowing email to proceed')
+      return true
     } else {
       return false
     }
   }
   return true
 }
+

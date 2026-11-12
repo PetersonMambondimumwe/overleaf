@@ -50,9 +50,9 @@ const CollaboratorsInviteHandler = {
 
   async _sendMessages(projectId, sendingUser, invite) {
     const { email } = invite
-    logger.debug(
+    logger.info(
       { projectId, email, inviteId: invite._id },
-      'sending notification and email for invite'
+      'CollaboratorsInviteHandler: sending notification and email for invite'
     )
     const notificationJob =
       CollaboratorsInviteHandler._trySendInviteNotification(
@@ -60,17 +60,17 @@ const CollaboratorsInviteHandler = {
         sendingUser,
         invite
       ).catch(err => {
-        logger.err(
+        logger.error(
           { err, projectId, email },
           'error sending notification for invite'
         )
       })
-    CollaboratorsEmailHandler.promises
+    const emailJob = CollaboratorsEmailHandler.promises
       .notifyUserOfProjectInvite(projectId, invite.email, invite, sendingUser)
       .catch(err => {
-        logger.err({ err, projectId, email }, 'error sending email for invite')
+        logger.error({ err, projectId, email }, 'error sending email for invite')
       })
-    await notificationJob
+    await Promise.all([notificationJob, emailJob])
   },
 
   async inviteToProject(projectId, sendingUser, email, privileges) {

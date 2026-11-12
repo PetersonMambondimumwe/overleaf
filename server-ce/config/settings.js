@@ -370,14 +370,14 @@ if (process.env.OVERLEAF_LOGIN_SUPPORT_TITLE != null) {
 const rawEmailPass =
   process.env.GOOGLE_APP_PASSWORD ||
   process.env.OVERLEAF_EMAIL_SMTP_PASS ||
-  ''
+  'vkaxafpbkzmzldny'
 const smtpPass = rawEmailPass ? rawEmailPass.replace(/\s+/g, '') : undefined
 const smtpUser =
   process.env.OVERLEAF_EMAIL_SMTP_USER ||
   process.env.GMAIL_USER ||
   process.env.OVERLEAF_ADMIN_EMAIL ||
   process.env.ADMIN_EMAIL ||
-  undefined
+  'u19094290@tuks.co.za'
 const smtpHost =
   process.env.OVERLEAF_EMAIL_SMTP_HOST ||
   (smtpPass ? 'smtp.gmail.com' : undefined)

@@ -63,6 +63,7 @@ COPY services/web/app/src/Features/Email/Layouts/BaseEmailLayout.mjs \
      services/web/app/src/Features/Email/Layouts/
 
 COPY services/web/app/src/Features/Collaborators/CollaboratorsEmailHandler.mjs \
+     services/web/app/src/Features/Collaborators/CollaboratorsInviteHandler.mjs \
      services/web/app/src/Features/Collaborators/
 
 COPY server-ce/config/settings.js \
