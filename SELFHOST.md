@@ -333,6 +333,17 @@ version must be removed or restored, not reused.
 **Compiles fail with "compilation timed out"** — TeX Live needs RAM; give Docker
 at least 4 GB. Large `tikz`/`pgfplots` documents need more.
 
+**Missing LaTeX packages (`LaTeX Error: File 'booktabs.sty' not found`)** — Vanilla
+Overleaf Community Edition only ships `scheme-basic`. Our Docker build automatically
+installs the academic package collections (`scheme-medium`, `collection-latexextra`,
+`collection-publishers`, `collection-mathscience`, etc.).
+If you need to install packages inside an existing running container without rebuilding:
+```bash
+docker exec -it sharelatex /overleaf/bin/install-texlive-packages.sh
+# or install individual packages on the fly:
+docker exec -it sharelatex tlmgr install <package-name>
+```
+
 **"Too many open files"** — raise Docker's `nofile` limit or the server's
 `fs.file-max`.
 

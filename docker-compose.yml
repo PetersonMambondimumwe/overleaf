@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile
       args:
         OVERLEAF_RELEASE_TAG: ${OVERLEAF_IMAGE_TAG:-latest}
+        TEXLIVE_PROFILE: ${TEXLIVE_PROFILE:-academic}
     container_name: sharelatex
     depends_on:
       mongo:

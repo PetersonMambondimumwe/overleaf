@@ -251,7 +251,22 @@ initialisation (destroys data).
 file at the overlay; the full source build needs a newer `sharelatex-base` than
 the published image.
 
-**Out of disk** — the base image plus TeX Live is ~6 GB, each rebuild can keep a
+**`LaTeX Error: File 'booktabs.sty' not found` (or missing packages)** — Vanilla
+Overleaf Community Edition ships with only `scheme-basic` TeX Live, missing
+common journal styles (`booktabs`, `multirow`, `manyfoot`, `algorithmicx`, etc.).
+Our Docker build automatically installs the academic publishing collections
+(`scheme-medium`, `collection-latexextra`, `collection-publishers`, `collection-mathscience`,
+`collection-fontsrecommended`, `collection-bibtexextra`).
+If you need to fix a currently running container on Dokploy immediately without redeploying:
+```bash
+docker exec -it $(docker ps -qf "name=sharelatex" | head -1) /overleaf/bin/install-texlive-packages.sh
+```
+Or install individual packages on the fly:
+```bash
+docker exec -it $(docker ps -qf "name=sharelatex" | head -1) tlmgr install <package-name>
+```
+
+**Out of disk** — the base image plus TeX Live is ~6–8 GB, each rebuild can keep a
 layer, and projects/compiles grow. Prune with `docker image prune` and give the
 server at least 30 GB.
 

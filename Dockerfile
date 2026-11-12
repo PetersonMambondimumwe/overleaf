@@ -1,8 +1,4 @@
-# Overleaf release image + this repo's Clerk / Google sign-in changes.
-#
-# This is an *overlay*: the published release image already contains the
-# compiled frontend, the Yarn PnP dependency tree and TeX Live, so only the
-# handful of server files that changed are replaced. The build takes seconds.
+# Overleaf release image + this repo's Clerk, AI, branding & TeX Live packages.
 #
 # It lives at the repository root so that build platforms which default to
 # `Dockerfile` (Dokploy, plain `docker build .`) work without extra settings.
@@ -12,6 +8,14 @@ ARG OVERLEAF_RELEASE_TAG=latest
 FROM sharelatex/sharelatex:${OVERLEAF_RELEASE_TAG}
 
 WORKDIR /overleaf
+
+# TeX Live packages: installs academic collections (booktabs, multirow,
+# manyfoot, algorithmicx, Springer Nature, IEEE, ACM, mathscience, etc.).
+# Pass TEXLIVE_PROFILE=full if scheme-full (~5 GB) is explicitly required.
+ARG TEXLIVE_PROFILE=academic
+COPY bin/install-texlive-packages.sh /overleaf/bin/
+RUN chmod +x /overleaf/bin/install-texlive-packages.sh && \
+    /overleaf/bin/install-texlive-packages.sh "${TEXLIVE_PROFILE}"
 
 COPY services/web/app/src/Features/Authentication/ClerkController.mjs \
      services/web/app/src/Features/Authentication/
