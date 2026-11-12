@@ -102,8 +102,9 @@ elif [ "${PROFILE}" = "essential" ] || [ "${PROFILE}" = "fast" ]; then
     "caption"
     "beamer"
     "multirow"
-    "manyfoot"
+    "ncctools"
     "algorithmicx"
+    "algorithms"
     "listings"
     "lipsum"
     "authblk"
@@ -124,8 +125,9 @@ else
   CORE_PKGS=(
     "booktabs"
     "multirow"
-    "manyfoot"
+    "ncctools"
     "algorithmicx"
+    "algorithms"
   )
   for pkg in "${CORE_PKGS[@]}"; do
     install_with_retry "${pkg}"
