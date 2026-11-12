@@ -47,22 +47,30 @@ const SYSTEM_PROMPT = [
   "Keep the author's language and voice.",
 ].join(' ')
 
-const requestSchema = z.object({
-  params: z.object({
-    Project_id: z.string().regex(/^[0-9a-f]{24}$/),
-  }),
-  body: z.object({
-    action: z.enum([
-      'grammar',
-      'clarity',
-      'formal',
-      'shorten',
-      'active',
-      'summarise',
-    ]),
-    text: z.string().min(1),
-  }),
-})
+const requestSchema = z
+  .object({
+    params: z
+      .object({
+        Project_id: z.string().regex(/^[0-9a-f]{24}$/).optional(),
+        project_id: z.string().regex(/^[0-9a-f]{24}$/).optional(),
+      })
+      .passthrough(),
+    body: z
+      .object({
+        action: z.enum([
+          'grammar',
+          'clarity',
+          'formal',
+          'shorten',
+          'active',
+          'summarise',
+        ]),
+        text: z.string().min(1),
+        _csrf: z.string().optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough()
 
 // Very small in-memory rate limiter: a single web instance, a handful of users.
 const requestLog = new Map()
@@ -71,13 +79,14 @@ function withinRateLimit(userId) {
   const now = Date.now()
   const windowMs = 60 * 1000
   const limit = Settings.ai?.requestsPerMinute || 15
-  const recent = (requestLog.get(userId) || []).filter(t => now - t < windowMs)
+  const key = String(userId)
+  const recent = (requestLog.get(key) || []).filter(t => now - t < windowMs)
   if (recent.length >= limit) {
-    requestLog.set(userId, recent)
+    requestLog.set(key, recent)
     return false
   }
   recent.push(now)
-  requestLog.set(userId, recent)
+  requestLog.set(key, recent)
   return true
 }
 
@@ -87,40 +96,80 @@ function stripCodeFence(text) {
   return fence ? fence[1].trim() : trimmed
 }
 
+function getCleanApiKey() {
+  const raw = Settings.ai?.apiKey || process.env.ANTHROPIC_API_KEY || ''
+  return String(raw).trim().replace(/^["']|["']$/g, '')
+}
+
 async function callAnthropic({ model, maxTokens, action, text }) {
-  if (!Settings.ai?.apiKey) {
+  const apiKey = getCleanApiKey()
+  if (!apiKey) {
     throw new OError('Anthropic API key is not configured')
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': Settings.ai.apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    signal: AbortSignal.timeout(60_000),
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `Task: ${ACTIONS[action].instruction}\n\nText to edit:\n<text>\n${text}\n</text>`,
-        },
-      ],
-    }),
-  })
-  const body = await response.text()
-  if (!response.ok) {
-    throw new OError('Anthropic request failed', {
-      status: response.status,
-      body: body.slice(0, 500),
-    })
+  const promptAction = ACTIONS[action]
+  if (!promptAction) {
+    throw new OError(`Invalid action: ${action}`)
   }
-  const data = JSON.parse(body)
-  const raw = (data.content || [])
+
+  let response
+  try {
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      signal: AbortSignal.timeout(60_000),
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        system: SYSTEM_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: `Task: ${promptAction.instruction}\n\nText to edit:\n<text>\n${text}\n</text>`,
+          },
+        ],
+      }),
+    })
+  } catch (err) {
+    const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError'
+    throw new OError(
+      isTimeout
+        ? 'Anthropic API request timed out after 60 seconds'
+        : `Could not connect to Anthropic API: ${err.message || err}`,
+      {
+        status: isTimeout ? 504 : 503,
+        networkError: true,
+        originalError: err.message,
+      }
+    )
+  }
+
+  const rawBody = await response.text()
+  let data = null
+  try {
+    data = JSON.parse(rawBody)
+  } catch (e) {
+    data = null
+  }
+
+  if (!response.ok) {
+    const errorDetail =
+      data?.error?.message || data?.message || rawBody.slice(0, 300)
+    throw new OError(
+      `Anthropic request failed (${response.status}): ${errorDetail}`,
+      {
+        status: response.status,
+        detail: errorDetail,
+        body: rawBody.slice(0, 500),
+      }
+    )
+  }
+
+  const raw = (data?.content || [])
     .filter(part => part.type === 'text')
     .map(part => part.text)
     .join('\n')
@@ -131,54 +180,107 @@ async function callAnthropic({ model, maxTokens, action, text }) {
   }
   return {
     result: tagged ? result : stripCodeFence(result),
-    usage: data.usage,
-    model: data.model,
+    usage: data?.usage,
+    model: data?.model || model,
   }
 }
 
 async function assist(req, res) {
-  if (!Settings.ai?.enabled || !Settings.ai?.apiKey) {
+  const apiKey = getCleanApiKey()
+  if (!Settings.ai?.enabled || !apiKey) {
     return res.status(503).json({
       message: {
         type: 'error',
-        text: 'The AI assistant is not configured on this instance.',
+        text: 'The AI assistant is not configured on this instance. Please configure ANTHROPIC_API_KEY in server environment.',
       },
+      error: 'The AI assistant is not configured on this instance.',
     })
   }
 
-  const { params, body } = parseReq(req, requestSchema)
-  const userId = SessionManager.getLoggedInUserId(req.session)
-  if (!userId) {
-    return res.status(401).json({ message: { type: 'error', text: 'Not logged in.' } })
-  }
-
-  const text = body.text
-  if (text.length > Settings.ai.maxInputChars) {
+  let params
+  let body
+  try {
+    const parsed = parseReq(req, requestSchema, { logOnly: true })
+    params = parsed.params || {}
+    body = parsed.body || {}
+  } catch (err) {
+    logger.warn({ err }, 'AI assist request validation failed')
     return res.status(400).json({
       message: {
         type: 'error',
-        text: `The selection is too long (${text.length} characters). Select up to ${Settings.ai.maxInputChars}.`,
+        text: 'Invalid request: ' + (err.message || 'validation failed'),
       },
+      error: err.message || 'validation failed',
     })
   }
+
+  const projectId =
+    params.Project_id ||
+    params.project_id ||
+    req.params?.Project_id ||
+    req.params?.project_id
+
+  const userId =
+    SessionManager.getLoggedInUserId(req.session) ||
+    req.user?._id ||
+    req.session?.passport?.user
+  if (!userId) {
+    return res.status(401).json({
+      message: { type: 'error', text: 'Not logged in.' },
+      error: 'Not logged in.',
+    })
+  }
+
+  const text = (body.text || '').trim()
+  if (!text) {
+    return res.status(400).json({
+      message: { type: 'error', text: 'Selected text cannot be empty.' },
+      error: 'Selected text cannot be empty.',
+    })
+  }
+
+  const maxInputChars = Settings.ai?.maxInputChars || 6000
+  if (text.length > maxInputChars) {
+    return res.status(400).json({
+      message: {
+        type: 'error',
+        text: `The selection is too long (${text.length} characters). Select up to ${maxInputChars}.`,
+      },
+      error: `The selection is too long (${text.length} characters). Select up to ${maxInputChars}.`,
+    })
+  }
+
   if (!withinRateLimit(userId)) {
     return res.status(429).json({
       message: {
         type: 'error',
         text: 'Too many AI requests. Wait a minute and try again.',
       },
+      error: 'Too many AI requests. Wait a minute and try again.',
     })
   }
 
   const action = ACTIONS[body.action]
+  if (!action) {
+    return res.status(400).json({
+      message: { type: 'error', text: `Unknown AI action: ${body.action}` },
+      error: `Unknown AI action: ${body.action}`,
+    })
+  }
+
   const maxTokens = Math.min(
-    Settings.ai.maxOutputTokens,
+    Settings.ai?.maxOutputTokens || 1024,
     Math.max(action.maxTokens, Math.ceil(text.length / 2))
   )
 
+  const model =
+    Settings.ai?.model ||
+    process.env.OVERLEAF_AI_MODEL ||
+    'claude-3-5-haiku-latest'
+
   try {
-    const { result, usage, model } = await callAnthropic({
-      model: Settings.ai.model,
+    const { result, usage, model: usedModel } = await callAnthropic({
+      model,
       maxTokens,
       action: body.action,
       text,
@@ -186,34 +288,55 @@ async function assist(req, res) {
     logger.info(
       {
         userId: String(userId),
-        projectId: params.Project_id,
+        projectId,
         action: body.action,
-        model,
+        model: usedModel,
         inputChars: text.length,
         inputTokens: usage?.input_tokens,
         outputTokens: usage?.output_tokens,
       },
-      'AI assist request'
+      'AI assist request completed successfully'
     )
     res.json({ result })
   } catch (error) {
     logger.warn(
-      { err: error, userId: String(userId), action: body.action, info: error.info },
+      {
+        err: error,
+        userId: String(userId),
+        projectId,
+        action: body?.action,
+        info: error.info,
+      },
       'AI assist request failed'
     )
+    const status = error.info?.status || 500
+    const detail = error.info?.detail || error.message || ''
+
     let userText = 'The AI service could not complete the request. Please try again.'
-    if (error.info?.status === 401) {
-      userText = 'Anthropic API key is invalid or expired. Check server settings.'
-    } else if (error.info?.status === 429) {
-      userText = 'Anthropic rate limit reached. Please wait a moment and try again.'
-    } else if (error.info?.status === 400) {
-      userText = 'Request rejected by AI service. Check that the selected text contains valid input.'
+    if (status === 401) {
+      userText = detail
+        ? `Anthropic authentication failed: ${detail}`
+        : 'Anthropic API key is invalid or expired. Check server settings.'
+    } else if (status === 429) {
+      userText = detail
+        ? `Anthropic rate limit reached: ${detail}`
+        : 'Anthropic rate limit reached. Please wait a moment and try again.'
+    } else if (status === 400 || status === 404) {
+      userText = detail
+        ? `Anthropic error: ${detail}`
+        : 'Request rejected by AI service. Check that the model name and selected text are valid.'
+    } else if (error.info?.networkError) {
+      userText = detail || 'Network error connecting to Anthropic API.'
+    } else if (detail) {
+      userText = `AI service error: ${detail}`
     }
-    res.status(502).json({
+
+    res.status(status >= 400 && status < 600 ? status : 500).json({
       message: {
         type: 'error',
         text: userText,
       },
+      error: userText,
     })
   }
 }

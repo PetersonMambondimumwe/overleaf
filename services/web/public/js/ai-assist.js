@@ -13,8 +13,11 @@
   if (!/^\/project\/[0-9a-f]{24}/.test(window.location.pathname)) return
 
   var projectId = window.location.pathname.split('/')[2]
-  var csrfMeta = document.querySelector('meta[name="ol-csrfToken"]')
-  var csrfToken = (csrfMeta ? csrfMeta.content : '') || window.csrfToken || ''
+
+  function getCsrfToken() {
+    var csrfMeta = document.querySelector('meta[name="ol-csrfToken"]')
+    return (csrfMeta ? csrfMeta.content : '') || window.csrfToken || ''
+  }
 
   var ACTIONS = [
     { id: 'grammar', label: 'Fix grammar', hint: 'Spelling, grammar & punctuation' },
@@ -163,31 +166,45 @@
     }
     setBusy(true)
     setStatus('Thinking…')
+    var token = getCsrfToken()
     fetch('/project/' + projectId + '/ai/assist', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'csrf-token': csrfToken,
+        'csrf-token': token,
+        'X-Csrf-Token': token,
+        'X-CSRF-TOKEN': token,
       },
       credentials: 'same-origin',
-      body: JSON.stringify({ action: action, text: text, _csrf: csrfToken }),
+      body: JSON.stringify({ action: action, text: text, _csrf: token }),
     })
       .then(function (response) {
-        return response.json().then(function (data) {
-          return { ok: response.ok, data: data }
+        return response.text().then(function (rawText) {
+          var data = null
+          try {
+            data = JSON.parse(rawText)
+          } catch (e) {
+            data = { rawText: rawText }
+          }
+          return { ok: response.ok, status: response.status, data: data }
         })
       })
       .then(function (res) {
         if (!res.ok) {
+          var data = res.data || {}
           var message =
-            (res.data && res.data.message && res.data.message.text) ||
-            'The AI request failed. Please try again.'
+            (data.message && typeof data.message === 'object' && data.message.text) ||
+            (typeof data.message === 'string' && data.message) ||
+            (typeof data.error === 'string' && data.error) ||
+            (typeof data.errorReason === 'string' && data.errorReason) ||
+            (typeof data.rawText === 'string' && data.rawText.length < 200 && data.rawText.trim()) ||
+            ('The AI request failed (HTTP ' + res.status + '). Please try again.')
           setStatus(message, 'error')
           setBusy(false)
           return
         }
-        lastResult = res.data.result || ''
+        lastResult = (res.data && res.data.result) || ''
         resultEl.textContent = lastResult
         resultEl.hidden = false
         replaceBtn.hidden = false
@@ -198,8 +215,9 @@
         )
         setBusy(false)
       })
-      .catch(function () {
-        setStatus('Could not reach the AI service. Check your connection.', 'error')
+      .catch(function (err) {
+        var errStr = err && err.message ? ' (' + err.message + ')' : ''
+        setStatus('Could not reach the AI service' + errStr + '. Check your connection.', 'error')
         setBusy(false)
       })
   }

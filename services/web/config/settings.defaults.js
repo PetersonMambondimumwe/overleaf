@@ -806,10 +806,19 @@ module.exports = {
 
   // AI writing assistant (Anthropic Claude), used from the editor.
   ai: {
-    enabled: Boolean(process.env.ANTHROPIC_API_KEY),
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    enabled: Boolean(
+      (process.env.ANTHROPIC_API_KEY || '')
+        .trim()
+        .replace(/^["']|["']$/g, '')
+    ),
+    apiKey: (process.env.ANTHROPIC_API_KEY || '')
+      .trim()
+      .replace(/^["']|["']$/g, ''),
     // Fast, cost-effective Claude model for high-volume latency-sensitive tasks.
-    model: process.env.OVERLEAF_AI_MODEL || 'claude-3-5-haiku-latest',
+    model:
+      (process.env.OVERLEAF_AI_MODEL || '')
+        .trim()
+        .replace(/^["']|["']$/g, '') || 'claude-3-5-haiku-latest',
     maxInputChars: parseInt(
       process.env.OVERLEAF_AI_MAX_INPUT_CHARS || '6000',
       10
