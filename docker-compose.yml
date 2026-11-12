@@ -76,9 +76,10 @@ services:
       OVERLEAF_CLERK_ALLOWED_DOMAINS: ${OVERLEAF_CLERK_ALLOWED_DOMAINS:-}
       # Optional, only needed when the publishable key is not the classic format.
       OVERLEAF_CLERK_FRONTEND_API: ${OVERLEAF_CLERK_FRONTEND_API:-}
-      # ---- AI writing assistant (Anthropic) -------------------------------
+      # ---- AI writing assistant (OpenRouter / Anthropic) ------------------
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OVERLEAF_AI_MODEL: ${OVERLEAF_AI_MODEL:-claude-3-5-haiku-latest}
+      OVERLEAF_AI_MODEL: ${OVERLEAF_AI_MODEL:-google/gemini-2.5-flash}
       OVERLEAF_AI_MAX_INPUT_CHARS: ${OVERLEAF_AI_MAX_INPUT_CHARS:-6000}
       OVERLEAF_AI_MAX_OUTPUT_TOKENS: ${OVERLEAF_AI_MAX_OUTPUT_TOKENS:-1024}
       OVERLEAF_AI_REQUESTS_PER_MINUTE: ${OVERLEAF_AI_REQUESTS_PER_MINUTE:-15}

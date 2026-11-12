@@ -804,21 +804,34 @@ module.exports = {
       .filter(Boolean),
   },
 
-  // AI writing assistant (Anthropic Claude), used from the editor.
+  // AI writing assistant (OpenRouter or Anthropic Claude), used from the editor.
   ai: {
     enabled: Boolean(
-      (process.env.ANTHROPIC_API_KEY || '')
+      (process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || '')
         .trim()
         .replace(/^["']|["']$/g, '')
     ),
-    apiKey: (process.env.ANTHROPIC_API_KEY || '')
+    openRouterApiKey: (process.env.OPENROUTER_API_KEY || '')
       .trim()
       .replace(/^["']|["']$/g, ''),
-    // Fast, cost-effective Claude model for high-volume latency-sensitive tasks.
+    anthropicApiKey: (process.env.ANTHROPIC_API_KEY || '')
+      .trim()
+      .replace(/^["']|["']$/g, ''),
+    apiKey: (
+      process.env.OPENROUTER_API_KEY ||
+      process.env.ANTHROPIC_API_KEY ||
+      ''
+    )
+      .trim()
+      .replace(/^["']|["']$/g, ''),
+    // Default model: Google Gemini 2.5 Flash on OpenRouter, or Claude 3.5 Haiku on Anthropic.
     model:
       (process.env.OVERLEAF_AI_MODEL || '')
         .trim()
-        .replace(/^["']|["']$/g, '') || 'claude-3-5-haiku-latest',
+        .replace(/^["']|["']$/g, '') ||
+      (process.env.OPENROUTER_API_KEY
+        ? 'google/gemini-2.5-flash'
+        : 'claude-3-5-haiku-latest'),
     maxInputChars: parseInt(
       process.env.OVERLEAF_AI_MAX_INPUT_CHARS || '6000',
       10
