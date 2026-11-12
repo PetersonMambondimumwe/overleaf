@@ -3,288 +3,600 @@ extends ../layout-website-redesign
 block vars
 	- isWebsiteRedesign = true
 	- suppressNavbar = true
+	- suppressFooter = true
+
+block append head-scripts
+	//- Inter, Fira Code and Newsreader Fonts
+	link(rel="preconnect" href="https://fonts.googleapis.com")
+	link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin="")
+	link(href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet")
+
+	//- Tailwind CSS v3 Engine
+	script(nonce=scriptNonce src="https://cdn.tailwindcss.com?plugins=forms,container-queries")
+	script(nonce=scriptNonce).
+		tailwind.config = {
+			theme: {
+				extend: {
+					fontFamily: {
+						sans: ['Inter', 'system-ui', 'sans-serif'],
+						mono: ['"Fira Code"', 'monospace'],
+						serif: ['Newsreader', 'serif'],
+					},
+					colors: {
+						emerald: {
+							850: '#0e4a30',
+							925: '#073321',
+							950: '#032316',
+						}
+					},
+					boxShadow: {
+						'glow-emerald': '0 0 50px -10px rgba(16, 185, 129, 0.28)',
+						'card-elevated': '0 25px 60px -15px rgba(6, 44, 30, 0.35), 0 0 1px 1px rgba(255, 255, 255, 0.2)',
+					}
+				}
+			}
+		}
 
 block append css
 	style.
-		.ol-clerk-page {
-			padding: 40px 16px 64px;
-			background: radial-gradient(1200px 600px at 10% -10%, #eaf5ee 0%, #f6f8f7 55%, #ffffff 100%);
+		body.website-redesign {
+			background: transparent !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			overflow-x: hidden !important;
 		}
-		.ol-clerk {
-			display: flex;
-			max-width: 1040px;
-			margin: 0 auto;
-			min-height: 560px;
-			background: #ffffff;
-			border: 1px solid #e3e8e4;
-			border-radius: 18px;
-			overflow: hidden;
-			box-shadow: 0 24px 70px rgba(15, 61, 38, 0.12);
-		}
-		.ol-clerk__brand {
-			flex: 1 1 46%;
+		.ol-clerk-page-wrapper {
+			min-height: 100vh;
+			min-height: 100dvh;
 			display: flex;
 			flex-direction: column;
-			justify-content: space-between;
-			gap: 48px;
-			padding: 48px 44px;
-			color: #ffffff;
-			background:
-				radial-gradient(600px 300px at 90% 0%, rgba(255, 255, 255, 0.14), transparent 60%),
-				linear-gradient(155deg, #0b3d24 0%, #116033 45%, #178a45 100%);
-		}
-		.ol-clerk__wordmark {
-			font-size: 22px;
-			font-weight: 700;
-			letter-spacing: -0.02em;
-			margin-bottom: 56px;
-		}
-		.ol-clerk__headline {
-			font-size: 34px;
-			line-height: 1.15;
-			font-weight: 600;
-			letter-spacing: -0.02em;
-			margin: 0 0 20px;
-			color: #ffffff;
-			text-wrap: balance;
-		}
-		.ol-clerk__lede {
-			font-size: 15px;
-			line-height: 1.65;
-			color: rgba(255, 255, 255, 0.82);
-			max-width: 34ch;
-			margin: 0;
-		}
-		.ol-clerk__points {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-			display: grid;
-			gap: 12px;
-			font-size: 14px;
-			color: rgba(255, 255, 255, 0.9);
-		}
-		.ol-clerk__points li {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
-		.ol-clerk__tick {
-			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			width: 20px;
-			height: 20px;
-			border-radius: 50%;
-			background: rgba(255, 255, 255, 0.16);
-			font-size: 11px;
-			flex: none;
+			padding: 1.5rem 1rem 2rem;
+			position: relative;
+			background: linear-gradient(135deg, #064e3b 0%, #115e59 50%, #047857 100%);
+			font-family: 'Inter', system-ui, sans-serif;
+			selection-background-color: #10b981;
+			selection-color: #ffffff;
 		}
-		.ol-clerk__panel {
-			flex: 1 1 54%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 48px 40px;
-			background: #ffffff;
+		.academic-grid-pattern {
+			background-size: 32px 32px;
+			background-image: 
+				linear-gradient(to right, rgba(5, 150, 105, 0.12) 1px, transparent 1px),
+				linear-gradient(to bottom, rgba(5, 150, 105, 0.12) 1px, transparent 1px);
 		}
-		.ol-clerk__card {
-			width: 100%;
-			max-width: 420px;
+		.code-glass {
+			background: rgba(4, 38, 25, 0.72);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
 		}
-		.ol-clerk__title {
-			font-size: 26px;
-			font-weight: 600;
-			letter-spacing: -0.02em;
-			margin: 0 0 6px;
-			color: #1b222c;
+		.shadow-card-elevated {
+			box-shadow: 0 25px 60px -15px rgba(6, 44, 30, 0.35), 0 0 1px 1px rgba(255, 255, 255, 0.2);
 		}
-		.ol-clerk__subtitle {
-			font-size: 14px;
-			line-height: 1.5;
-			color: #5c6b7a;
-			margin: 0 0 24px;
+		.shadow-glow-emerald {
+			box-shadow: 0 0 50px -10px rgba(16, 185, 129, 0.28);
 		}
-		.ol-clerk__mount {
-			min-height: 220px;
-			margin-top: 8px;
-		}
-		.ol-clerk__status {
-			margin: 16px 0 0;
-			font-size: 14px;
-			color: #5c6b7a;
-		}
-		.ol-clerk__error {
-			margin: 16px 0 0;
-			padding: 12px 14px;
-			border-radius: 8px;
-			background: #fdf1f0;
-			border: 1px solid #f3c9c4;
-			color: #8a2c22;
-			font-size: 13px;
-			line-height: 1.45;
-		}
-		.ol-clerk__alt {
-			margin: 22px 0 0;
-			font-size: 13px;
-			color: #5c6b7a;
-		}
-		.ol-clerk__alt a {
-			color: #116033;
-			font-weight: 600;
-		}
-		.ol-clerk__legal {
-			margin: 18px 0 0;
-			font-size: 12px;
-			line-height: 1.5;
-			color: #8b97a3;
-		}
-		.ol-clerk__mount .cl-card {
+
+		/* Clerk Theme and Alignment Overrides */
+		#clerk-signin .cl-rootBox,
+		#clerk-signin .cl-card {
 			box-shadow: none !important;
 			border: 0 !important;
 			padding: 0 !important;
 			background: transparent !important;
 			width: 100% !important;
 		}
-		/* Hide Clerk's own header: the page already has the "Sign in" heading. */
 		#clerk-signin .cl-header {
 			display: none !important;
 		}
 		#clerk-signin .cl-socialButtonsBlockButton {
-			height: 46px !important;
-			border-radius: 8px !important;
+			height: 50px !important;
+			border-radius: 12px !important;
+			border: 1px solid #e2e8f0 !important;
+			background-color: #ffffff !important;
+			color: #334155 !important;
 			font-weight: 600 !important;
+			font-size: 14px !important;
+			box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+			transition: all 0.2s ease !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			gap: 12px !important;
 		}
-		#clerk-signin .cl-footer {
-			font-size: 11px !important;
-			opacity: 0.75;
+		#clerk-signin .cl-socialButtonsBlockButton:hover {
+			background-color: #f8fafc !important;
+			border-color: #cbd5e1 !important;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07) !important;
+		}
+		#clerk-signin .cl-dividerLine {
+			background-color: #e2e8f0 !important;
+		}
+		#clerk-signin .cl-dividerText {
+			color: #94a3b8 !important;
+			font-size: 12px !important;
+			text-transform: uppercase !important;
+			letter-spacing: 0.05em !important;
+			font-weight: 500 !important;
+		}
+		#clerk-signin .cl-formFieldLabel {
+			font-size: 12px !important;
+			font-weight: 600 !important;
+			color: #334155 !important;
+			text-transform: uppercase !important;
+			letter-spacing: 0.05em !important;
+			margin-bottom: 8px !important;
 		}
 		#clerk-signin .cl-formFieldInput {
-			border-radius: 8px !important;
+			border-radius: 12px !important;
+			background-color: #f8fafc !important;
+			border: 1px solid #e2e8f0 !important;
+			height: 48px !important;
+			font-size: 14px !important;
+			color: #0f172a !important;
+			padding: 0 16px !important;
+			transition: all 0.2s ease !important;
 		}
-		@media (max-width: 860px) {
-			.ol-clerk {
-				flex-direction: column;
-				min-height: 0;
-			}
-			.ol-clerk__brand {
-				padding: 32px 28px;
-				gap: 28px;
-			}
-			.ol-clerk__wordmark {
-				margin-bottom: 20px;
-			}
-			.ol-clerk__headline {
-				font-size: 30px;
-			}
-			.ol-clerk__points {
-				display: none;
-			}
-			.ol-clerk__panel {
-				padding: 32px 24px 40px;
-			}
+		#clerk-signin .cl-formFieldInput:focus {
+			background-color: #ffffff !important;
+			border-color: #059669 !important;
+			box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
 		}
-		@media (max-width: 520px) {
-			.ol-clerk-page {
-				padding: 16px 8px 40px;
-			}
-			.ol-clerk {
-				border-radius: 12px;
-			}
+		#clerk-signin .cl-formButtonPrimary {
+			height: 48px !important;
+			border-radius: 12px !important;
+			background: linear-gradient(to right, #065f46, #047857) !important;
+			font-weight: 600 !important;
+			font-size: 14px !important;
+			color: #ffffff !important;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+			transition: all 0.2s ease !important;
+		}
+		#clerk-signin .cl-formButtonPrimary:hover {
+			background: linear-gradient(to right, #047857, #059669) !important;
+			box-shadow: 0 0 50px -10px rgba(16, 185, 129, 0.28) !important;
+		}
+		#clerk-signin .cl-footerActionLink {
+			color: #065f46 !important;
+			font-weight: 600 !important;
+		}
+		#clerk-signin .cl-footerActionLink:hover {
+			color: #047857 !important;
+			text-decoration: underline !important;
 		}
 
 block content
-	main#main-content.content.ol-clerk-page
-		.ol-clerk
-			aside.ol-clerk__brand
-				div
-					.ol-clerk__wordmark Overleaf
-					h1.ol-clerk__headline
+	.ol-clerk-page-wrapper
+		//- Ambient Background Effects
+		div(class="fixed inset-0 academic-grid-pattern pointer-events-none opacity-60")
+		div(class="fixed -top-40 -left-40 w-[32rem] h-[32rem] bg-emerald-400/35 rounded-full blur-3xl pointer-events-none")
+		div(class="fixed top-1/3 -right-24 w-[28rem] h-[28rem] bg-teal-300/25 rounded-full blur-3xl pointer-events-none")
+		div(class="fixed -bottom-40 -right-40 w-[36rem] h-[36rem] bg-emerald-300/30 rounded-full blur-3xl pointer-events-none")
+		div(class="fixed bottom-10 left-10 w-80 h-80 bg-teal-400/20 rounded-full blur-2xl pointer-events-none")
+
+		//- Interactive Mathematical Particles Canvas
+		canvas#math-particles-canvas(class="fixed inset-0 w-full h-full pointer-events-none z-0")
+
+		//- Main Login Container Card
+		main(class="relative z-10 w-full max-w-5xl bg-white rounded-3xl shadow-card-elevated border border-white/20 overflow-hidden flex flex-col lg:flex-row transition-all duration-300")
+			//- Left Brand Hero Section
+			section(class="lg:w-[54%] bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-850 p-8 sm:p-10 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden")
+				//- Subtle Decorative Top Ambient Glow
+				div(class="absolute -right-20 -top-20 w-72 h-72 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none")
+				div(class="absolute bottom-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none")
+
+				//- Top Brand Header
+				div(class="relative z-10")
+					//- Logo and Badges
+					div(class="flex items-center justify-between gap-4 mb-10")
+						div(class="flex items-center gap-3")
+							div(class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-white shadow-inner backdrop-blur-sm")
+								svg(class="w-6 h-6 text-emerald-300" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24")
+									path(d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5")
+							div
+								span(class="text-2xl font-bold tracking-tight text-white flex items-center gap-1.5")
+									| Overleaf
+									span(class="text-xs px-2 py-0.5 rounded-md font-mono font-medium tracking-normal bg-emerald-500/20 text-emerald-300 border border-emerald-400/20") LaTeX
+
+					//- Main Value Proposition Copy
+					h1(class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12] mb-5" style='font-family: "Times New Roman", Times, serif;')
 						| Write together.
 						br
-						| Publish with confidence.
-					p.ol-clerk__lede
-						| A shared LaTeX workspace for your whole team: real-time
-						| collaboration, version history and one-click PDF builds.
-				ul.ol-clerk__points
-					li
-						span.ol-clerk__tick ✓
-						| Compile in the browser, nothing to install
-					li
-						span.ol-clerk__tick ✓
-						| Projects stay on this server
-					li
-						span.ol-clerk__tick ✓
-						| Sign in with your university Google account
-			section.ol-clerk__panel
-				.ol-clerk__card
-					h2.ol-clerk__title Sign in
-					p.ol-clerk__subtitle
-						| Use your #{clerk.allowedEmailDomains.length ? clerk.allowedEmailDomains.map(function (domain) { return '@' + domain }).join(' or ') : 'Google'} account to continue.
-					#clerk-signin.ol-clerk__mount(
+						span(class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-emerald-100 to-teal-300")
+							| Publish with confidence.
+
+					p(class="text-emerald-100/80 text-base sm:text-lg leading-relaxed max-w-md font-normal mb-8")
+						| A shared LaTeX workspace for your whole team: real-time collaboration, version history and one-click PDF builds.
+
+					//- Dynamic LaTeX Code Snippet Preview Card
+					div(class="code-glass border border-emerald-600/30 rounded-2xl p-4 shadow-lg mb-8 transition hover:border-emerald-500/50 group")
+						div(class="flex items-center justify-between border-b border-emerald-700/40 pb-2.5 mb-3 text-xs text-emerald-300/80 font-mono")
+							div(class="flex items-center gap-2")
+								span(class="w-2.5 h-2.5 rounded-full bg-red-400/80")
+								span(class="w-2.5 h-2.5 rounded-full bg-amber-400/80")
+								span(class="w-2.5 h-2.5 rounded-full bg-emerald-400/80")
+								span(class="ml-1 text-emerald-200 font-medium") main.tex
+							span(class="text-[11px] bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-300 font-mono") pdfLaTeX • v4.2
+						div(class="font-mono text-xs text-emerald-100/90 space-y-1 overflow-x-auto leading-relaxed")
+							p
+								span(class="text-emerald-400") \documentclass
+								| {article}
+							p
+								span(class="text-emerald-400") \usepackage
+								| {amsmath, amssymb, hyperref}
+							p
+								span(class="text-emerald-400") \begin
+								| {document}
+							p(class="pl-4 text-emerald-200/95 font-medium")
+								span(class="text-teal-300") \section
+								| {Quantum Computation in Real-Time}
+							p(class="pl-4 text-emerald-300/90 font-serif italic")
+								| \mathbf{H} |\psi\rangle = i\hbar \frac{\partial}{\partial t} |\psi\rangle
+							p
+								span(class="text-emerald-400") \end
+								| {document}
+
+				//- Feature Badges List
+				div(class="relative z-10 pt-4 border-t border-emerald-800/60 space-y-3")
+					div(class="flex items-center gap-3")
+						div(class="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm shadow-emerald-400/80")
+						span(class="text-sm font-medium text-emerald-100") Compile in the browser, nothing to install
+					div(class="flex items-center gap-3")
+						div(class="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm shadow-emerald-400/80")
+						span(class="text-sm font-medium text-emerald-100") Projects stay on this secure server
+					div(class="flex items-center gap-3")
+						div(class="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm shadow-emerald-400/80")
+						span(class="text-sm font-medium text-emerald-100") Sign in with your university Google account
+
+			//- Right Sign-In Section
+			section(class="lg:w-[46%] p-8 sm:p-10 lg:p-12 bg-white flex flex-col justify-between")
+				div
+					//- Sign-in Header
+					div(class="mb-8")
+						h2(class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2") Sign in
+						div(class="flex items-center flex-wrap gap-2 text-sm text-slate-500")
+							span Use your
+							if clerk.allowedEmailDomains && clerk.allowedEmailDomains.length
+								each domain in clerk.allowedEmailDomains
+									span(class="inline-flex items-center font-mono font-semibold px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs") @#{domain}
+							else
+								span(class="inline-flex items-center font-mono font-semibold px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs") @tuks.co.za
+							span account to continue.
+
+					//- Mount Target for Clerk Sign-In
+					#clerk-signin(
+						class="ol-clerk__mount w-full"
 						data-publishable-key=clerk.publishableKey || ''
 						data-frontend-api=clerk.frontendApi || ''
 						data-csrf=csrfToken
 					)
-					p#clerk-status.ol-clerk__status(hidden)
-						| Signing you in…
-					#clerk-error.ol-clerk__error(role='alert' hidden)
-					p.ol-clerk__alt
-						| Signing in with a password instead?
-						|
-						a(href='/login/classic') Admin login
-					p.ol-clerk__legal
-						| By continuing you agree to the terms of use of this
-						| self-hosted Overleaf instance.
+						//- Elegant Pre-Mount Placeholder while Clerk JS loads
+						div(class="space-y-6")
+							div(class="relative")
+								div(class="absolute -top-3 right-4 z-10")
+									span(class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm") Last used
+								button#init-google-btn(class="w-full relative flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600/30" type="button")
+									svg(class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24")
+										path(d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4")
+										path(d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853")
+										path(d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05")
+										path(d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335")
+									span Continue with Google
+
+							div(class="relative flex items-center justify-center my-6")
+								div(class="w-full border-t border-slate-200")
+								span(class="bg-white px-3 text-xs uppercase tracking-wider text-slate-400 font-medium") or
+
+							form#init-email-form(class="space-y-4")
+								div
+									label(class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2" for="init-email-input") Email address
+									div(class="relative")
+										input#init-email-input(class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-sm placeholder:text-slate-400 focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 outline-none transition-all duration-200" name="email" placeholder="name@tuks.co.za" required="" type="email")
+										div(class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400")
+											svg(class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24")
+												path(d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" stroke-linecap="round" stroke-linejoin="round" stroke-width="2")
+								button(class="w-full group mt-2 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 text-white font-semibold text-sm shadow-md hover:shadow-glow-emerald transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2" type="submit")
+									span Continue
+									svg(class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="currentColor" viewBox="0 0 20 20")
+										path(clip-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" fill-rule="evenodd")
+
+							div(class="mt-4 text-center")
+								p(class="text-sm text-slate-600")
+									| Don't have an account? 
+									a#init-signup-link(class="font-semibold text-emerald-800 hover:text-emerald-700 hover:underline transition-colors" href="#/sign-up") Sign up
+
+					p#clerk-status(class="mt-4 text-center text-sm font-medium text-emerald-800" hidden) Signing you in…
+					#clerk-error(class="mt-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs leading-relaxed" role="alert" hidden)
+
+				//- Bottom Footer Section
+				footer(class="mt-8 pt-6 border-t border-slate-100 space-y-3")
+					p(class="text-center text-xs text-slate-500")
+						| Signing in with a password instead? 
+						a(class="font-semibold text-emerald-800 hover:text-emerald-700 hover:underline ml-1" href="/login/classic") Admin login
+					p(class="text-center text-[11px] leading-relaxed text-slate-400")
+						| By continuing you agree to the terms of use of this self-hosted Overleaf instance.
+
+		//- Global Footer Attribution
+		footer(class="relative z-10 mt-6 text-center text-xs text-emerald-100/75 tracking-wide font-medium")
+			| Designed and Developed by Sir_Peterson
 
 block append foot-scripts
+	//- Interactive Mathematical Particles Simulation
 	script(nonce=scriptNonce).
 		(function () {
-			var mount = document.getElementById('clerk-signin')
-			if (!mount) return
-			var status = document.getElementById('clerk-status')
-			var errorBox = document.getElementById('clerk-error')
-			var publishableKey = mount.getAttribute('data-publishable-key')
-			var frontendApi = mount.getAttribute('data-frontend-api')
-			var csrf = mount.getAttribute('data-csrf')
-			var signInUrl = window.location.origin + '/login'
-			var signUpUrl = window.location.origin + '/login#/sign-up'
-			var bridged = false
+			const canvas = document.getElementById('math-particles-canvas');
+			if (!canvas) return;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) return;
+
+			let width = 0;
+			let height = 0;
+			let dpr = window.devicePixelRatio || 1;
+
+			const mathSymbols = [
+				'∫', '∑', '∂', '∇', 'ψ', 'ℏ', '∞', 'λ', 
+				'α', 'Ω', 'Δ', '≈', 'π', '∈', '∀', '∃', 
+				'∮', '√x', 'σ', 'θ', 'μ', 'φ'
+			];
+
+			const colors = [
+				{ r: 236, g: 253, b: 245 }, // emerald-50 (luminous mint)
+				{ r: 209, g: 250, b: 229 }, // emerald-100
+				{ r: 167, g: 243, b: 208 }, // emerald-200
+				{ r: 204, g: 251, b: 241 }, // teal-100
+				{ r: 255, g: 255, b: 255 }  // crisp white highlight
+			];
+
+			const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+			let isReduced = prefersReducedMotion.matches;
+			prefersReducedMotion.addEventListener('change', (e) => {
+				isReduced = e.matches;
+			});
+
+			const mouse = {
+				x: -1000,
+				y: -1000,
+				active: false,
+				radius: 175
+			};
+
+			window.addEventListener('mousemove', (e) => {
+				mouse.x = e.clientX;
+				mouse.y = e.clientY;
+				mouse.active = true;
+			});
+
+			window.addEventListener('mouseleave', () => {
+				mouse.active = false;
+				mouse.x = -1000;
+				mouse.y = -1000;
+			});
+
+			function resize() {
+				width = window.innerWidth;
+				height = window.innerHeight;
+				dpr = window.devicePixelRatio || 1;
+				canvas.width = Math.floor(width * dpr);
+				canvas.height = Math.floor(height * dpr);
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.scale(dpr, dpr);
+			}
+
+			window.addEventListener('resize', resize);
+			resize();
+
+			class Particle {
+				constructor() {
+					this.reset(true);
+				}
+
+				reset(init = false) {
+					this.symbol = mathSymbols[Math.floor(Math.random() * mathSymbols.length)];
+					this.color = colors[Math.floor(Math.random() * colors.length)];
+					this.fontSize = Math.floor(Math.random() * 11) + 18; // 18px to 28px
+					
+					this.x = Math.random() * (width || window.innerWidth);
+					this.y = init ? Math.random() * (height || window.innerHeight) : height + 30;
+
+					// Base gentle ambient drift
+					this.vx = (Math.random() - 0.5) * 0.28;
+					this.vy = -(Math.random() * 0.45 + 0.15); // gentle upwards drift
+
+					// Extra impulse from mouse repelling
+					this.fx = 0;
+					this.fy = 0;
+
+					// Rotation & wobble
+					this.angle = (Math.random() - 0.5) * 0.4;
+					this.angularSpeed = (Math.random() - 0.5) * 0.005;
+					this.wobblePhase = Math.random() * Math.PI * 2;
+					this.wobbleSpeed = Math.random() * 0.015 + 0.008;
+
+					// Opacity oscillation adjusted for clear contrast on lighter green background
+					this.baseOpacityMin = 0.20 + Math.random() * 0.08;
+					this.baseOpacityMax = 0.52 + Math.random() * 0.15;
+					this.pulsePhase = Math.random() * Math.PI * 2;
+					this.pulseSpeed = Math.random() * 0.02 + 0.01;
+				}
+
+				update() {
+					if (isReduced) {
+						this.pulsePhase += 0.005;
+						return;
+					}
+
+					this.pulsePhase += this.pulseSpeed;
+					this.wobblePhase += this.wobbleSpeed;
+					this.angle += this.angularSpeed;
+
+					// Mouse interactive swirl / repulsion
+					if (mouse.active) {
+						const dx = this.x - mouse.x;
+						const dy = this.y - mouse.y;
+						const distSq = dx * dx + dy * dy;
+						const rSq = mouse.radius * mouse.radius;
+
+						if (distSq < rSq && distSq > 0.1) {
+							const dist = Math.sqrt(distSq);
+							const force = (1 - dist / mouse.radius);
+							const normalX = dx / dist;
+							const normalY = dy / dist;
+
+							// Repel gently + slight tangential swirl
+							const swirlX = -normalY * 0.8;
+							const swirlY = normalX * 0.8;
+
+							this.fx += (normalX * 1.8 + swirlX) * force * 0.85;
+							this.fy += (normalY * 1.8 + swirlY) * force * 0.85;
+						}
+					}
+
+					// Apply velocity dampening to impulses
+					this.fx *= 0.93;
+					this.fy *= 0.93;
+
+					// Apply natural movement + wobble
+					const wobbleX = Math.sin(this.wobblePhase) * 0.25;
+					this.x += this.vx + wobbleX + this.fx;
+					this.y += this.vy + this.fy;
+
+					// Wrap around viewport edges smoothly
+					if (this.y < -40) {
+						this.y = height + 30;
+						this.x = Math.random() * width;
+					} else if (this.y > height + 40) {
+						this.y = -30;
+					}
+
+					if (this.x < -40) {
+						this.x = width + 30;
+					} else if (this.x > width + 40) {
+						this.x = -30;
+					}
+				}
+
+				draw() {
+					const norm = (Math.sin(this.pulsePhase) + 1) / 2; // 0 to 1
+					const alpha = this.baseOpacityMin + norm * (this.baseOpacityMax - this.baseOpacityMin);
+
+					ctx.save();
+					ctx.translate(this.x, this.y);
+					ctx.rotate(this.angle);
+
+					ctx.font = `italic ${this.fontSize}px "Newsreader", "KaTeX_Math", "Cambria Math", "Times New Roman", serif`;
+					ctx.textAlign = 'center';
+					ctx.textBaseline = 'middle';
+					ctx.shadowColor = 'rgba(255, 255, 255, 0.35)';
+					ctx.shadowBlur = 6;
+					ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${alpha})`;
+
+					ctx.fillText(this.symbol, 0, 0);
+					ctx.restore();
+				}
+			}
+
+			const particleCount = Math.max(32, Math.min(65, Math.floor((window.innerWidth * window.innerHeight) / 24000)));
+			const particles = [];
+			for (let i = 0; i < particleCount; i++) {
+				particles.push(new Particle());
+			}
+
+			let animId;
+			function animate() {
+				ctx.clearRect(0, 0, width, height);
+				for (let i = 0; i < particles.length; i++) {
+					particles[i].update();
+					particles[i].draw();
+				}
+				animId = requestAnimationFrame(animate);
+			}
+
+			animId = requestAnimationFrame(animate);
+		})();
+
+	//- Clerk Client Integration & Session Bridging
+	script(nonce=scriptNonce).
+		(function () {
+			var mount = document.getElementById('clerk-signin');
+			if (!mount) return;
+			var status = document.getElementById('clerk-status');
+			var errorBox = document.getElementById('clerk-error');
+			var publishableKey = mount.getAttribute('data-publishable-key');
+			var frontendApi = mount.getAttribute('data-frontend-api');
+			var csrf = mount.getAttribute('data-csrf');
+			var signInUrl = window.location.origin + '/login';
+			var signUpUrl = window.location.origin + '/login#/sign-up';
+			var bridged = false;
 
 			function showError(text) {
-				errorBox.textContent = text
-				errorBox.hidden = false
-				status.hidden = true
+				if (!errorBox) return;
+				errorBox.textContent = text;
+				errorBox.hidden = false;
+				if (status) status.hidden = true;
 			}
 
 			function showStatus(text) {
-				status.textContent = text
-				status.hidden = false
+				if (!status) return;
+				status.textContent = text;
+				status.hidden = false;
+			}
+
+			var initGoogleBtn = document.getElementById('init-google-btn');
+			if (initGoogleBtn) {
+				initGoogleBtn.addEventListener('click', function () {
+					if (window.Clerk && window.Clerk.openSignIn) {
+						window.Clerk.openSignIn();
+					} else {
+						showStatus('Connecting to Google sign-in…');
+					}
+				});
+			}
+
+			var initEmailForm = document.getElementById('init-email-form');
+			if (initEmailForm) {
+				initEmailForm.addEventListener('submit', function (e) {
+					e.preventDefault();
+					var emailInput = document.getElementById('init-email-input');
+					var email = emailInput ? emailInput.value.trim() : '';
+					if (!email) return;
+					if (window.Clerk && window.Clerk.client && window.Clerk.client.signIn) {
+						showStatus('Connecting…');
+						window.Clerk.client.signIn.create({ identifier: email })
+							.then(function () {
+								render();
+							})
+							.catch(function (err) {
+								showError((err && err.errors && err.errors[0] && err.errors[0].message) || 'Sign-in failed.');
+							});
+					} else {
+						showStatus('Connecting…');
+					}
+				});
 			}
 
 			if (!publishableKey || !frontendApi) {
-				showError('Google sign-in is not configured on this instance yet. Use the admin login link below, or ask the administrator to finish the Clerk setup.')
-				mount.hidden = true
-				return
+				showError('Google sign-in is not configured on this instance yet. Use the admin login link below, or ask the administrator to finish the Clerk setup.');
+				return;
 			}
 
 			var appearance = {
 				variables: {
-					colorPrimary: '#116033',
-					colorText: '#1b222c',
-					colorTextSecondary: '#5c6b7a',
+					colorPrimary: '#047857',
+					colorText: '#0f172a',
+					colorTextSecondary: '#64748b',
 					colorBackground: '#ffffff',
-					colorInputBackground: '#ffffff',
-					colorInputText: '#1b222c',
-					borderRadius: '8px',
-					fontFamily: 'inherit'
+					colorInputBackground: '#f8fafc',
+					colorInputText: '#0f172a',
+					borderRadius: '0.75rem',
+					fontFamily: 'Inter, system-ui, sans-serif'
 				},
 				elements: {
 					card: {
 						backgroundColor: 'transparent',
 						boxShadow: 'none',
 						border: 'none',
-						padding: '0'
+						padding: '0',
+						width: '100%'
 					},
 					cardBox: {
 						boxShadow: 'none',
@@ -294,19 +606,36 @@ block append foot-scripts
 					},
 					header: { display: 'none' },
 					socialButtonsBlockButton: {
-						height: '46px',
-						borderRadius: '8px',
-						fontWeight: '600'
+						height: '50px',
+						borderRadius: '12px',
+						fontWeight: '600',
+						border: '1px solid #e2e8f0',
+						backgroundColor: '#ffffff',
+						fontSize: '14px',
+						color: '#334155'
 					},
-					formFieldInput: { borderRadius: '8px' },
+					formButtonPrimary: {
+						height: '48px',
+						borderRadius: '12px',
+						background: 'linear-gradient(to right, #065f46, #047857)',
+						fontWeight: '600',
+						fontSize: '14px'
+					},
+					formFieldInput: {
+						borderRadius: '12px',
+						backgroundColor: '#f8fafc',
+						border: '1px solid #e2e8f0',
+						height: '48px',
+						fontSize: '14px'
+					},
 					footer: { fontSize: '11px', opacity: '0.75' }
 				}
-			}
+			};
 
 			function bridge(session) {
-				if (bridged) return
-				bridged = true
-				showStatus('Signing you in…')
+				if (bridged) return;
+				bridged = true;
+				showStatus('Signing you in…');
 				session.getToken().then(function (token) {
 					return fetch('/auth/clerk', {
 						method: 'POST',
@@ -315,93 +644,85 @@ block append foot-scripts
 							'Accept': 'application/json'
 						},
 						body: new URLSearchParams({ _csrf: csrf, token: token })
-					})
+					});
 				}).then(function (response) {
-					return response.json().catch(function () { return {} }).then(function (data) {
+					return response.json().catch(function () { return {}; }).then(function (data) {
 						if (response.ok && data.redir) {
-							window.location.assign(data.redir)
-							return
+							window.location.assign(data.redir);
+							return;
 						}
-						bridged = false
-						showError((data.message && data.message.text) || 'Sign-in failed. Please try again.')
-					})
+						bridged = false;
+						showError((data.message && data.message.text) || 'Sign-in failed. Please try again.');
+					});
 				}).catch(function () {
-					bridged = false
-					showError('Sign-in failed. Please try again.')
-				})
+					bridged = false;
+					showError('Sign-in failed. Please try again.');
+				});
 			}
 
 			function unmount() {
-				try { window.Clerk.unmountSignIn(mount) } catch (e) {}
-				try { window.Clerk.unmountSignUp(mount) } catch (e) {}
-				mount.innerHTML = ''
+				try { window.Clerk.unmountSignIn(mount); } catch (e) {}
+				try { window.Clerk.unmountSignUp(mount); } catch (e) {}
+				mount.innerHTML = '';
 			}
 
 			function render() {
-				unmount()
+				unmount();
 				if (window.location.hash === '#/sign-up') {
 					window.Clerk.mountSignUp(mount, {
 						appearance: appearance,
 						signInUrl: signInUrl
-					})
+					});
 				} else {
 					window.Clerk.mountSignIn(mount, {
 						appearance: appearance,
 						signUpUrl: signUpUrl
-					})
+					});
 				}
 			}
 
 			function loadScript(src) {
 				return new Promise(function (resolve, reject) {
-					var script = document.createElement('script')
-					script.src = src
-					script.async = true
-					script.crossOrigin = 'anonymous'
-					// clerk-js auto-initialises from this attribute; without it the
-					// bundle throws "Missing publishableKey" and never defines window.Clerk.
-					script.setAttribute('data-clerk-publishable-key', publishableKey)
-					script.setAttribute('data-clerk-frontend-api', frontendApi)
-					script.onload = resolve
-					script.onerror = function () { reject(new Error('Failed to load Clerk.js')) }
-					document.head.appendChild(script)
-				})
+					var script = document.createElement('script');
+					script.src = src;
+					script.async = true;
+					script.crossOrigin = 'anonymous';
+					script.setAttribute('data-clerk-publishable-key', publishableKey);
+					script.setAttribute('data-clerk-frontend-api', frontendApi);
+					script.onload = resolve;
+					script.onerror = function () { reject(new Error('Failed to load Clerk.js')); };
+					document.head.appendChild(script);
+				});
 			}
 
-			var signedOut =
-				new URLSearchParams(window.location.search).get('logged_out') === '1'
+			var signedOut = new URLSearchParams(window.location.search).get('logged_out') === '1';
 
 			loadScript('https://' + frontendApi + '/npm/@clerk/clerk-js@5/dist/clerk.browser.js')
-				.then(function () { return window.Clerk.load() })
+				.then(function () { return window.Clerk.load(); })
 				.then(async function () {
 					if (signedOut) {
-						// The Overleaf session has just been destroyed. End the Clerk
-						// session as well, otherwise /login would immediately bridge the
-						// still-active Clerk session and sign the user back in.
-						history.replaceState(null, '', window.location.pathname)
+						history.replaceState(null, '', window.location.pathname);
 						if (window.Clerk.session) {
 							try {
 								await window.Clerk.signOut({
 									redirectUrl: window.location.origin + '/login'
-								})
-							} catch (e) {
-								// fall through and show the signed-out page anyway
-							}
+								});
+							} catch (e) {}
 						}
-						showStatus('You have been signed out.')
-						render()
-						return
+						showStatus('You have been signed out.');
+						render();
+						return;
 					}
 					if (window.Clerk.session) {
-						bridge(window.Clerk.session)
-						return
+						bridge(window.Clerk.session);
+						return;
 					}
-					render()
+					render();
 					window.Clerk.addListener(function (resources) {
-						if (resources.session) bridge(resources.session)
-					})
+						if (resources.session) bridge(resources.session);
+					});
 				})
 				.catch(function () {
-					showError('Could not reach the sign-in service. Check your connection and reload the page.')
-				})
-		})()
+					// Fallback: the pre-rendered UI remains active
+				});
+		})();
