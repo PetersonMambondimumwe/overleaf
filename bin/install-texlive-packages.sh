@@ -8,6 +8,11 @@ echo "TeX Live Installer for Overleaf Community Edition"
 echo "Target Profile: ${PROFILE}"
 echo "=========================================================="
 
+if [ "${PROFILE}" = "none" ] || [ "${PROFILE}" = "skip" ]; then
+  echo "Skipping TeX Live package installation as requested (profile: ${PROFILE})."
+  exit 0
+fi
+
 # Ensure tlmgr is in PATH
 if ! command -v tlmgr >/dev/null 2>&1; then
   TLMGR_PATH=$(find /usr/local/texlive -name tlmgr -type f 2>/dev/null | head -n 1 || true)
@@ -42,28 +47,107 @@ fi
 echo "Using repository: ${REPO}"
 tlmgr --verify-repo=none option repository "${REPO}" || true
 
+# CRITICAL: When CTAN releases infrastructure updates, tlmgr refuses to install
+# any package until 'tlmgr update --self' has completed.
+echo "Updating TeX Live package manager infrastructure (tlmgr update --self)..."
+for attempt in 1 2 3; do
+  echo "Running 'tlmgr update --self' (attempt ${attempt}/3)..."
+  if tlmgr --verify-repo=none --repository "${REPO}" update --self; then
+    echo "tlmgr self-update succeeded."
+    break
+  else
+    echo "Warning: tlmgr update --self attempt ${attempt} returned non-zero."
+    if [ "${attempt}" -lt 3 ]; then
+      echo "Attempting official CTAN update-tlmgr-latest.sh script..."
+      TMP_UPDATER="/tmp/update-tlmgr-latest.sh"
+      if curl -fsSL "https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh" -o "${TMP_UPDATER}" 2>/dev/null || \
+         wget -qO "${TMP_UPDATER}" "https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh" 2>/dev/null; then
+        chmod +x "${TMP_UPDATER}"
+        sh "${TMP_UPDATER}" -- --upgrade || true
+        rm -f "${TMP_UPDATER}"
+      fi
+      sleep 2
+    fi
+  fi
+done
+
+hash -r || true
+
+install_with_retry() {
+  local target="$1"
+  echo "--> Installing package / collection: ${target}..."
+  for attempt in 1 2 3; do
+    if tlmgr install --verify-repo=none --repository "${REPO}" "${target}"; then
+      echo "--> Successfully installed: ${target}"
+      return 0
+    else
+      echo "--> Warning: Attempt ${attempt}/3 for ${target} failed."
+      if [ "${attempt}" -lt 3 ]; then
+        echo "--> Retrying ${target} in 5 seconds..."
+        sleep 5
+      fi
+    fi
+  done
+  echo "--> ERROR: Failed to install ${target} after 3 attempts."
+  return 1
+}
+
 if [ "${PROFILE}" = "full" ]; then
   echo "Installing scheme-full (all CTAN packages)..."
-  tlmgr install --verify-repo=none --repository "${REPO}" scheme-full
+  install_with_retry scheme-full
+elif [ "${PROFILE}" = "essential" ] || [ "${PROFILE}" = "fast" ]; then
+  echo "Installing essential academic packages..."
+  ESSENTIAL_PKGS=(
+    "booktabs"
+    "caption"
+    "beamer"
+    "multirow"
+    "manyfoot"
+    "algorithmicx"
+    "listings"
+    "lipsum"
+    "authblk"
+    "siunitx"
+    "physics"
+    "cite"
+    "amsmath"
+    "hyperref"
+    "xcolor"
+    "microtype"
+  )
+  for pkg in "${ESSENTIAL_PKGS[@]}"; do
+    install_with_retry "${pkg}"
+  done
 else
   echo "Installing academic publishing suite..."
-  echo "  - scheme-medium (plain, latex, latexrecommended [booktabs, caption, beamer, microtype, etc.])"
-  echo "  - collection-latexextra (algorithmicx, multirow, manyfoot, listings, lipsum, authblk, etc.)"
-  echo "  - collection-mathscience (siunitx, chemfig, mathrsfs, physics, etc.)"
-  echo "  - collection-publishers (Springer Nature, IEEE, ACM, Elsevier, etc.)"
-  echo "  - collection-fontsrecommended"
-  echo "  - collection-bibtexextra"
-  tlmgr install --verify-repo=none --repository "${REPO}" \
-    scheme-medium \
-    collection-latexextra \
-    collection-mathscience \
-    collection-publishers \
-    collection-fontsrecommended \
-    collection-bibtexextra
+  # First ensure the most commonly requested journal/article packages are installed
+  CORE_PKGS=(
+    "booktabs"
+    "multirow"
+    "manyfoot"
+    "algorithmicx"
+  )
+  for pkg in "${CORE_PKGS[@]}"; do
+    install_with_retry "${pkg}"
+  done
+
+  # Then install broader academic collections
+  ACADEMIC_COLLECTIONS=(
+    "scheme-medium"
+    "collection-latexextra"
+    "collection-mathscience"
+    "collection-publishers"
+    "collection-fontsrecommended"
+    "collection-bibtexextra"
+  )
+  for coll in "${ACADEMIC_COLLECTIONS[@]}"; do
+    install_with_retry "${coll}"
+  done
 fi
 
 echo "Updating system paths and font maps..."
 tlmgr path add || true
+updmap-sys || true
 fmtutil-sys --all || true
 
 echo "=========================================================="
