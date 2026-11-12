@@ -367,17 +367,48 @@ if (process.env.OVERLEAF_LOGIN_SUPPORT_TITLE != null) {
 
 // Sending Email
 // -------------
-//
-// You must configure a mail server to be able to send invite emails from
-// Overleaf Community Edition. The config settings are passed to nodemailer. See the nodemailer
-// documentation for available options:
-//
-//     http://www.nodemailer.com/docs/transports
+const rawEmailPass =
+  process.env.GOOGLE_APP_PASSWORD ||
+  process.env.OVERLEAF_EMAIL_SMTP_PASS ||
+  ''
+const smtpPass = rawEmailPass ? rawEmailPass.replace(/\s+/g, '') : undefined
+const smtpUser =
+  process.env.OVERLEAF_EMAIL_SMTP_USER ||
+  process.env.GMAIL_USER ||
+  process.env.OVERLEAF_ADMIN_EMAIL ||
+  process.env.ADMIN_EMAIL ||
+  undefined
+const smtpHost =
+  process.env.OVERLEAF_EMAIL_SMTP_HOST ||
+  (smtpPass ? 'smtp.gmail.com' : undefined)
+const smtpPort = process.env.OVERLEAF_EMAIL_SMTP_PORT
+  ? parseInt(process.env.OVERLEAF_EMAIL_SMTP_PORT, 10)
+  : smtpHost === 'smtp.gmail.com'
+    ? 465
+    : 587
+const smtpSecure =
+  process.env.OVERLEAF_EMAIL_SMTP_SECURE != null
+    ? process.env.OVERLEAF_EMAIL_SMTP_SECURE === 'true'
+    : smtpPort === 465
+const emailAppName =
+  process.env.OVERLEAF_APP_NAME ||
+  process.env.APP_NAME ||
+  'Overleaf'
+const fromAddress =
+  process.env.OVERLEAF_EMAIL_FROM_ADDRESS ||
+  (smtpUser ? `${emailAppName} <${smtpUser}>` : undefined)
+const replyTo =
+  process.env.OVERLEAF_EMAIL_REPLY_TO || smtpUser || fromAddress || ''
 
-if (process.env.OVERLEAF_EMAIL_FROM_ADDRESS != null) {
+if (
+  fromAddress != null ||
+  smtpHost != null ||
+  process.env.OVERLEAF_EMAIL_AWS_SES_ACCESS_KEY_ID != null
+) {
   settings.email = {
-    fromAddress: process.env.OVERLEAF_EMAIL_FROM_ADDRESS,
-    replyTo: process.env.OVERLEAF_EMAIL_REPLY_TO || '',
+    fromAddress: fromAddress || `${emailAppName} <support@example.com>`,
+    replyTo,
+    replyToAddress: replyTo,
     driver: process.env.OVERLEAF_EMAIL_DRIVER,
     parameters: {
       // AWS Creds
@@ -386,10 +417,10 @@ if (process.env.OVERLEAF_EMAIL_FROM_ADDRESS != null) {
       region: process.env.OVERLEAF_EMAIL_AWS_SES_REGION || 'us-east-1',
 
       // SMTP Creds
-      host: process.env.OVERLEAF_EMAIL_SMTP_HOST,
-      port: process.env.OVERLEAF_EMAIL_SMTP_PORT,
-      secure: parse(process.env.OVERLEAF_EMAIL_SMTP_SECURE),
-      ignoreTLS: parse(process.env.OVERLEAF_EMAIL_SMTP_IGNORE_TLS),
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      ignoreTLS: process.env.OVERLEAF_EMAIL_SMTP_IGNORE_TLS === 'true',
       name: process.env.OVERLEAF_EMAIL_SMTP_NAME,
       logger: process.env.OVERLEAF_EMAIL_SMTP_LOGGER === 'true',
     },
@@ -400,21 +431,17 @@ if (process.env.OVERLEAF_EMAIL_FROM_ADDRESS != null) {
     },
   }
 
-  if (
-    process.env.OVERLEAF_EMAIL_SMTP_USER != null ||
-    process.env.OVERLEAF_EMAIL_SMTP_PASS != null
-  ) {
+  if (smtpUser != null || smtpPass != null) {
     settings.email.parameters.auth = {
-      user: process.env.OVERLEAF_EMAIL_SMTP_USER,
-      pass: process.env.OVERLEAF_EMAIL_SMTP_PASS,
+      user: smtpUser,
+      pass: smtpPass,
     }
   }
 
   if (process.env.OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH != null) {
     settings.email.parameters.tls = {
-      rejectUnauthorized: parse(
-        process.env.OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH
-      ),
+      rejectUnauthorized:
+        process.env.OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH !== 'false',
     }
   }
 }

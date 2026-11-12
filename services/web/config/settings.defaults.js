@@ -631,18 +631,95 @@ module.exports = {
 
   // Email support
   // -------------
-  //
-  //	Overleaf uses nodemailer (http://www.nodemailer.com/) to send transactional emails.
-  //	To see the range of transport and options they support, see http://www.nodemailer.com/docs/transports
-  // email:
-  //	fromAddress: ""
-  //	replyTo: ""
-  //	lifecycle: false
-  // # Example transport and parameter settings for Amazon SES
-  //	transport: "SES"
-  //	parameters:
-  //		AWSAccessKeyID: ""
-  //		AWSSecretKey: ""
+  email: (() => {
+    const rawPass =
+      process.env.GOOGLE_APP_PASSWORD ||
+      process.env.OVERLEAF_EMAIL_SMTP_PASS ||
+      ''
+    const smtpPass = rawPass ? rawPass.replace(/\s+/g, '') : undefined
+    const smtpUser =
+      process.env.OVERLEAF_EMAIL_SMTP_USER ||
+      process.env.GMAIL_USER ||
+      process.env.OVERLEAF_ADMIN_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      undefined
+    const smtpHost =
+      process.env.OVERLEAF_EMAIL_SMTP_HOST ||
+      (smtpPass ? 'smtp.gmail.com' : undefined)
+    const smtpPort = process.env.OVERLEAF_EMAIL_SMTP_PORT
+      ? parseInt(process.env.OVERLEAF_EMAIL_SMTP_PORT, 10)
+      : smtpHost === 'smtp.gmail.com'
+        ? 465
+        : 587
+    const smtpSecure =
+      process.env.OVERLEAF_EMAIL_SMTP_SECURE != null
+        ? process.env.OVERLEAF_EMAIL_SMTP_SECURE === 'true'
+        : smtpPort === 465
+
+    const appName =
+      process.env.OVERLEAF_APP_NAME ||
+      process.env.APP_NAME ||
+      'Overleaf'
+    const fromAddress =
+      process.env.OVERLEAF_EMAIL_FROM_ADDRESS ||
+      (smtpUser ? `${appName} <${smtpUser}>` : undefined)
+    const replyTo =
+      process.env.OVERLEAF_EMAIL_REPLY_TO || smtpUser || fromAddress || ''
+
+    if (
+      !smtpHost &&
+      !fromAddress &&
+      !process.env.OVERLEAF_EMAIL_AWS_SES_ACCESS_KEY_ID
+    ) {
+      return undefined
+    }
+
+    const emailConfig = {
+      fromAddress: fromAddress || `${appName} <support@example.com>`,
+      replyTo,
+      replyToAddress: replyTo,
+      driver: process.env.OVERLEAF_EMAIL_DRIVER,
+      lifecycle: process.env.OVERLEAF_EMAIL_LIFECYCLE === 'true',
+      textEncoding: process.env.OVERLEAF_EMAIL_TEXT_ENCODING,
+      template: {
+        customFooter: process.env.OVERLEAF_CUSTOM_EMAIL_FOOTER,
+      },
+    }
+
+    if (
+      process.env.OVERLEAF_EMAIL_AWS_SES_ACCESS_KEY_ID ||
+      process.env.OVERLEAF_EMAIL_DRIVER === 'ses'
+    ) {
+      emailConfig.parameters = {
+        AWSAccessKeyID: process.env.OVERLEAF_EMAIL_AWS_SES_ACCESS_KEY_ID,
+        AWSSecretKey: process.env.OVERLEAF_EMAIL_AWS_SES_SECRET_KEY,
+        region: process.env.OVERLEAF_EMAIL_AWS_SES_REGION || 'us-east-1',
+      }
+    } else if (smtpHost) {
+      emailConfig.parameters = {
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        ignoreTLS: process.env.OVERLEAF_EMAIL_SMTP_IGNORE_TLS === 'true',
+        name: process.env.OVERLEAF_EMAIL_SMTP_NAME,
+        logger: process.env.OVERLEAF_EMAIL_SMTP_LOGGER === 'true',
+      }
+      if (smtpUser || smtpPass) {
+        emailConfig.parameters.auth = {
+          user: smtpUser,
+          pass: smtpPass,
+        }
+      }
+      if (process.env.OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH != null) {
+        emailConfig.parameters.tls = {
+          rejectUnauthorized:
+            process.env.OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH !== 'false',
+        }
+      }
+    }
+
+    return emailConfig
+  })(),
 
   // For legacy reasons, we need to populate this object.
   sentry: {},

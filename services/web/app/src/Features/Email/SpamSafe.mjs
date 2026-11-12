@@ -19,29 +19,36 @@ function countDigits(str) {
 
 const SpamSafe = {
   isSafeUserName(name) {
-    return SAFE_REGEX.test(name) && name.length <= 30
+    if (!name || typeof name !== 'string') {
+      return false
+    }
+    return SAFE_REGEX.test(name) && name.length <= 60
   },
 
   isSafeProjectName(name) {
-    if (SPAM_TAGS_REGEX.test(name) || countDigits(name) > 5) {
+    if (!name || typeof name !== 'string') {
+      return false
+    }
+    if (SPAM_TAGS_REGEX.test(name)) {
       return false
     }
 
     if (HAN_REGEX.test(name)) {
-      return SAFE_REGEX.test(name) && name.length <= 10
+      return SAFE_REGEX.test(name) && name.length <= 30
     }
-    return SAFE_REGEX.test(name) && name.length <= 100
+    return SAFE_REGEX.test(name) && name.length <= 150
   },
 
   isSafeEmail(email) {
-    if (!EMAIL_REGEX.test(email) || email.length > 40) {
+    if (!email || typeof email !== 'string') {
+      return false
+    }
+    if (!EMAIL_REGEX.test(email) || email.length > 100) {
       return false
     }
 
-    // All-digits, e.g. qq, is safe, but mixed digits and letters is not.
-    const localPart = email.split('@')[0]
-    const digitCount = countDigits(localPart)
-    return digitCount === localPart.length || digitCount <= 5
+    // Allow standard email formats including institutional student/staff IDs (e.g. u19094290@tuks.co.za)
+    return true
   },
 
   safeUserName(name, alternative, project) {

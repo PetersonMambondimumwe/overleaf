@@ -16,13 +16,17 @@ const CollaboratorsEmailHandler = {
       .exec()
     const emailOptions = {
       to: email,
-      replyTo: project.owner_ref.email,
+      replyTo:
+        sendingUser?.email ||
+        project?.owner_ref?.email ||
+        Settings.email?.replyTo,
       project: {
         name: project.name,
       },
       inviteUrl: CollaboratorsEmailHandler._buildInviteUrl(project, invite),
       owner: project.owner_ref,
-      sendingUser_id: sendingUser._id,
+      sendingUser,
+      sendingUser_id: sendingUser?._id,
     }
     await EmailHandler.promises.sendEmail('projectInvite', emailOptions)
   },

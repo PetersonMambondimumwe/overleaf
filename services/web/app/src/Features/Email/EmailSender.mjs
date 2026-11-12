@@ -102,7 +102,10 @@ async function sendEmail(options, emailType) {
       subject: options.subject,
       html: options.html,
       text: options.text,
-      replyTo: options.replyTo || EMAIL_SETTINGS.replyToAddress,
+      replyTo:
+        options.replyTo ||
+        EMAIL_SETTINGS.replyToAddress ||
+        EMAIL_SETTINGS.replyTo,
       socketTimeout: 30 * 1000,
     }
     if (options.cc) {

@@ -5,7 +5,27 @@ import { fontFamily, colors } from '../emailStyles.mjs'
 const _isSaas = settings.env === 'saas'
 const _imageBase = settings.cdn?.web?.host || settings.siteUrl || null
 
-let _logoHtml = `<span style="font-family: ${fontFamily}; font-size: 30px; font-weight: bold; color: ${colors.logoGreen};">${settings.appName}</span>`
+let _logoHtml = `
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="vertical-align: middle; padding-right: 12px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center" bgcolor="${colors.ctaGreen}" style="background-color: ${colors.ctaGreen}; border-radius: 8px; width: 36px; height: 36px; text-align: center;">
+              <span style="font-family: ${fontFamily}; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 36px; display: inline-block;">O</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td style="vertical-align: middle;">
+        <a href="${settings.siteUrl || '#'}" style="text-decoration: none; display: block;">
+          <span style="display: block; font-family: ${fontFamily}; font-size: 20px; font-weight: 700; color: ${colors.logoGreen}; letter-spacing: -0.3px; line-height: 22px;">${settings.appName}</span>
+          <span style="display: block; font-family: ${fontFamily}; font-size: 11px; font-weight: 600; color: ${colors.textMuted}; text-transform: uppercase; letter-spacing: 0.8px; line-height: 14px;">Campus Portal</span>
+        </a>
+      </td>
+    </tr>
+  </table>
+`
 let _taglineHtml = ''
 if (_isSaas && _imageBase) {
   _logoHtml = `
@@ -110,12 +130,12 @@ export default _.template(`\
 
           <!-- White content card -->
           <tr>
-            <td bgcolor="#ffffff" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+            <td bgcolor="#ffffff" style="background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;">
               <table class="email-layout-table" role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td
                     class="email-card-inner"
-                    style="padding: 32px 24px; font-family: ${fontFamily}; font-size: 16px; line-height: 1.5; color: ${colors.textDark};"
+                    style="padding: 36px 28px; font-family: ${fontFamily}; font-size: 15px; line-height: 1.6; color: ${colors.textDark};"
                   >
                     <%= body %>
                   </td>
@@ -131,8 +151,15 @@ export default _.template(`\
 
           <!-- Footer tagline -->
           <tr>
-            <td align="center" style="padding: 0 0 48px 0;">
+            <td align="center" style="padding: 0 0 16px 0;">
               ${_taglineHtml}
+            </td>
+          </tr>
+
+          <!-- Campus portal developer signature -->
+          <tr>
+            <td align="center" style="padding: 0 0 16px 0; font-family: ${fontFamily}; font-size: 12px; color: ${colors.textMuted}; line-height: 1.5;">
+              Designed and Developed by <strong style="color: ${colors.ctaGreen};">Sir_Peterson</strong>
             </td>
           </tr>
 

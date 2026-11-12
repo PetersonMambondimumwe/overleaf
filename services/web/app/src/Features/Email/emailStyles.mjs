@@ -1,12 +1,14 @@
-export const fontFamily = 'Arial, Helvetica, sans-serif'
+export const fontFamily =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 export const colors = {
-  textDark: '#1b222c',
-  textMuted: '#495365',
-  background: '#f4f5f6',
-  ctaGreen: '#098842',
+  textDark: '#0f172a',
+  textMuted: '#64748b',
+  background: '#f8fafc',
+  ctaGreen: '#059669',
   ctaText: '#ffffff',
-  linkGreen: '#1e6b41',
-  linkHover: '#155a30',
-  logoGreen: '#04652f',
+  linkGreen: '#059669',
+  linkHover: '#047857',
+  logoGreen: '#047857',
 }
+

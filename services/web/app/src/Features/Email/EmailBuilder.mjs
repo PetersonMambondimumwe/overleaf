@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import settings from '@overleaf/settings'
 import moment from 'moment'
+import { fontFamily, colors } from './emailStyles.mjs'
 import EmailMessageHelper from './EmailMessageHelper.mjs'
 import StringHelper from '../Helpers/StringHelper.mjs'
 import BaseEmailLayout from './Layouts/BaseEmailLayout.mjs'
@@ -288,71 +289,167 @@ templates.confirmCode = NoCTAEmailTemplate({
   },
 })
 
-templates.projectInvite = ctaTemplate({
+function _getInviterDetails(opts) {
+  const user = opts.sendingUser || opts.owner || {}
+  const firstName = (user.first_name || '').trim()
+  const lastName = (user.last_name || '').trim()
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+  const email = (user.email || '').trim()
+
+  const displayName = fullName || email || 'A colleague'
+  return {
+    displayName,
+    email,
+  }
+}
+
+templates.projectInvite = {
   subject(opts) {
-    const safeName = SpamSafe.isSafeProjectName(opts.project.name)
-    const safeEmail = SpamSafe.isSafeEmail(opts.owner.email)
-
-    if (safeName && safeEmail) {
-      return `"${opts.project.name}" — shared by ${_.escape(opts.owner.email)}`
+    const { displayName } = _getInviterDetails(opts)
+    const projectName = opts.project?.name
+    if (projectName && displayName) {
+      return `"${projectName}" — collaboration invitation from ${displayName}`
     }
-    if (safeName) {
-      return `${settings.appName} project shared with you — "${_.escape(
-        opts.project.name
-      )}"`
+    if (projectName) {
+      return `"${projectName}" — project shared with you on ${settings.appName}`
     }
-    if (safeEmail) {
-      return `${_.escape(opts.owner.email)} shared an ${
-        settings.appName
-      } project with you`
+    if (displayName) {
+      return `${displayName} shared a project with you on ${settings.appName}`
     }
-
     return `An ${settings.appName} project has been shared with you`
   },
-  title(opts) {
-    return 'Project Invite'
+  layout(opts) {
+    return BaseEmailLayout(opts)
   },
-  greeting(opts) {
+  footerMessage() {
     return ''
   },
-  message(opts, isPlainText) {
-    // build message depending on spam-safe variables
-    const message = [`You have been invited to an ${settings.appName} project.`]
+  plainTextTemplate(opts) {
+    const { displayName, email } = _getInviterDetails(opts)
+    const projectName = opts.project?.name || 'Untitled Project'
+    const inviterText =
+      email && email !== displayName ? `${displayName} (${email})` : displayName
 
-    if (SpamSafe.isSafeProjectName(opts.project.name)) {
-      message.push('<br/> Project:')
-      message.push(`<b>${_.escape(opts.project.name)}</b>`)
-    }
+    let body = `PROJECT INVITATION\r\n\r\n`
+    body += `Hi,\r\n\r\n`
+    body += `${inviterText} has invited you to collaborate on the LaTeX project "${projectName}" on ${settings.appName}.\r\n\r\n`
+    body += `Project Name: ${projectName}\r\n`
+    body += `Access: Full Edit Access\r\n\r\n`
+    body += `To accept this invitation and open the project, visit:\r\n`
+    body += `${opts.inviteUrl}\r\n\r\n`
+    body += `If you do not have an account yet, you can sign in directly with your institutional Google account.\r\n\r\n`
+    body += `Regards,\r\nThe ${settings.appName} Team - ${settings.siteUrl || ''}\r\n`
+    return body
+  },
+  compiledTemplate(opts) {
+    const { displayName, email } = _getInviterDetails(opts)
+    const projectName = opts.project?.name || 'Untitled Project'
+    const inviteUrl = opts.inviteUrl || '#'
+    const appName = settings.appName || 'Overleaf'
 
-    if (SpamSafe.isSafeEmail(opts.owner.email)) {
-      message.push(`<br/> Shared by:`)
-      message.push(`<b>${_.escape(opts.owner.email)}</b>`)
-    }
+    const escapedDisplayName = _.escape(displayName)
+    const escapedEmail = _.escape(email)
+    const escapedProjectName = _.escape(projectName)
+    const escapedInviteUrl = _.escape(inviteUrl)
+    const escapedAppName = _.escape(appName)
 
-    if (message.length === 1) {
-      message.push('<br/> Please view the project to find out more.')
-    }
+    const inviterHtml =
+      escapedEmail && escapedEmail !== escapedDisplayName
+        ? `<strong>${escapedDisplayName}</strong> (<a href="mailto:${escapedEmail}" style="color: ${colors.ctaGreen}; text-decoration: none;">${escapedEmail}</a>)`
+        : `<strong>${escapedDisplayName}</strong>`
 
-    return message.map(m => {
-      return EmailMessageHelper.cleanHTML(m, isPlainText)
-    })
+    return `
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+        <tr>
+          <td style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9999px; padding: 4px 14px; font-family: ${fontFamily}; font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.8px;">
+            Project Invitation
+          </td>
+        </tr>
+      </table>
+
+      <h1 style="margin: 0 0 16px 0; font-family: ${fontFamily}; font-size: 24px; font-weight: 700; color: #0f172a; line-height: 32px; letter-spacing: -0.3px;">
+        You've been invited to collaborate
+      </h1>
+
+      <p style="margin: 0 0 24px 0; font-family: ${fontFamily}; font-size: 15px; color: #334155; line-height: 24px;">
+        ${inviterHtml} has invited you to collaborate on a LaTeX project on <strong>${escapedAppName}</strong>.
+      </p>
+
+      <!-- Project Card -->
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin: 0 0 28px 0;">
+        <tr>
+          <td style="padding: 20px 24px;">
+            <div style="font-family: ${fontFamily}; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.8px; margin-bottom: 8px;">
+              Project Title
+            </div>
+            <div style="font-family: ${fontFamily}; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 26px; word-break: break-word;">
+              ${escapedProjectName}
+            </div>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #edf2f7; width: 100%;">
+              <tr>
+                <td style="font-family: ${fontFamily}; font-size: 13px; color: #64748b; line-height: 18px;">
+                  Access: <strong style="color: #047857;">Full Edit Access</strong>
+                </td>
+                <td align="right" style="font-family: ${fontFamily}; font-size: 13px; color: #64748b; line-height: 18px;">
+                  Invited by: <strong style="color: #334155;">${escapedDisplayName}</strong>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- CTA Button -->
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 28px auto; width: 100%;">
+        <tr>
+          <td align="center">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" bgcolor="${colors.ctaGreen}" style="background-color: ${colors.ctaGreen}; border-radius: 8px;">
+                  <a href="${escapedInviteUrl}" target="_blank" style="display: inline-block; padding: 14px 32px; font-family: ${fontFamily}; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; text-align: center; letter-spacing: 0.2px;">
+                    Accept Invitation &amp; Open Project &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Direct URL Fallback -->
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f1f5f9; border-radius: 8px; margin: 0 0 24px 0;">
+        <tr>
+          <td style="padding: 14px 18px;">
+            <p style="margin: 0 0 6px 0; font-family: ${fontFamily}; font-size: 12px; font-weight: 600; color: #475569;">
+              Button not working? Copy and paste this URL into your browser:
+            </p>
+            <p style="margin: 0; font-family: ${fontFamily}; font-size: 13px; line-height: 18px; word-break: break-all;">
+              <a href="${escapedInviteUrl}" style="color: ${colors.ctaGreen}; text-decoration: underline;">${escapedInviteUrl}</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin: 0; font-family: ${fontFamily}; font-size: 13px; color: #64748b; line-height: 20px;">
+        💡 If you don't have an Overleaf account yet, simply click the button above and log in with your institutional Google account to gain immediate access.
+      </p>
+
+      <script type="application/ld+json">
+        ${StringHelper.stringifyJsonForScript({
+          '@context': 'http://schema.org',
+          '@type': 'EmailMessage',
+          potentialAction: {
+            '@type': 'ViewAction',
+            target: inviteUrl,
+            url: inviteUrl,
+            name: 'Accept Invitation & Open Project',
+          },
+          description: `Join "${projectName}" on ${appName}`,
+        })}
+      </script>
+    `
   },
-  ctaText() {
-    return 'View project'
-  },
-  ctaURL(opts) {
-    return opts.inviteUrl
-  },
-  gmailGoToAction(opts) {
-    return {
-      target: opts.inviteUrl,
-      name: 'View project',
-      description: `Join ${_.escape(
-        SpamSafe.safeProjectName(opts.project.name, 'project')
-      )} at ${settings.appName}`,
-    }
-  },
-})
+}
 
 templates.verifyEmailToJoinTeam = ctaTemplate({
   subject(opts) {

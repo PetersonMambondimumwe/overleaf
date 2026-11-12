@@ -46,3 +46,27 @@ COPY services/web/public/js/ai-assist.js \
 
 COPY services/web/config/settings.defaults.js \
      services/web/config/
+
+COPY services/web/app/src/Features/Email/emailStyles.mjs \
+     services/web/app/src/Features/Email/
+
+COPY services/web/app/src/Features/Email/EmailBuilder.mjs \
+     services/web/app/src/Features/Email/
+
+COPY services/web/app/src/Features/Email/EmailSender.mjs \
+     services/web/app/src/Features/Email/
+
+COPY services/web/app/src/Features/Email/SpamSafe.mjs \
+     services/web/app/src/Features/Email/
+
+COPY services/web/app/src/Features/Email/Layouts/BaseEmailLayout.mjs \
+     services/web/app/src/Features/Email/Layouts/
+
+COPY services/web/app/src/Features/Collaborators/CollaboratorsEmailHandler.mjs \
+     services/web/app/src/Features/Collaborators/
+
+COPY server-ce/config/settings.js \
+     /etc/overleaf/settings.js
+
+RUN if [ -d /etc/sharelatex ]; then cp /etc/overleaf/settings.js /etc/sharelatex/settings.js; fi
+
