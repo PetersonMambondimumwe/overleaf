@@ -372,7 +372,7 @@ module.exports = {
 
   adminUrl: process.env.ADMIN_URL,
   adminOnlyLogin: process.env.ADMIN_ONLY_LOGIN === 'true',
-  adminPrivilegeAvailable: process.env.ADMIN_PRIVILEGE_AVAILABLE === 'true',
+  adminPrivilegeAvailable: process.env.ADMIN_PRIVILEGE_AVAILABLE !== 'false',
   adminRolesEnabled: false,
   blockCrossOriginRequests: process.env.BLOCK_CROSS_ORIGIN_REQUESTS === 'true',
   allowedOrigins: (process.env.ALLOWED_ORIGINS || siteUrl).split(','),

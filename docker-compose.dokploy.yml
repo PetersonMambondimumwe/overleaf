@@ -52,7 +52,8 @@ services:
       # ---- Site identity ------------------------------------------------
       OVERLEAF_APP_NAME: ${OVERLEAF_APP_NAME:-Overleaf}
       OVERLEAF_SITE_URL: ${OVERLEAF_SITE_URL:?Set OVERLEAF_SITE_URL in Dokploy}
-      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL:-}
+      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL:-u19094290@tuks.co.za}
+      ADMIN_PRIVILEGE_AVAILABLE: "true"
 
       # ---- Required secret ----------------------------------------------
       OVERLEAF_INVITE_TOKEN_SECRET: ${OVERLEAF_INVITE_TOKEN_SECRET:?Set OVERLEAF_INVITE_TOKEN_SECRET in Dokploy}

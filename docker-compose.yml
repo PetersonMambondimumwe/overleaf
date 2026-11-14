@@ -47,7 +47,8 @@ services:
       # ---- Site identity -------------------------------------------------
       OVERLEAF_APP_NAME: ${OVERLEAF_APP_NAME:-Overleaf Community Edition}
       OVERLEAF_SITE_URL: ${OVERLEAF_SITE_URL:-http://localhost}
-      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL:-}
+      OVERLEAF_ADMIN_EMAIL: ${OVERLEAF_ADMIN_EMAIL:-u19094290@tuks.co.za}
+      ADMIN_PRIVILEGE_AVAILABLE: "true"
 
       # ---- Required secret ------------------------------------------------
       # Signs invite tokens. Generate with: openssl rand -base64 32

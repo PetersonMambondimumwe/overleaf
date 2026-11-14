@@ -188,10 +188,24 @@ async function findOrCreateUser({ email, firstName, lastName, clerkUserId }) {
     error.publicMessage = 'Your Overleaf account is suspended.'
     throw error
   }
+  const adminEmail = (
+    Settings.adminEmail ||
+    process.env.OVERLEAF_ADMIN_EMAIL ||
+    'u19094290@tuks.co.za'
+  )
+    .trim()
+    .toLowerCase()
+  const isAdmin = email.trim().toLowerCase() === adminEmail
+
+  const updateFields = { holdingAccount: false }
+  if (isAdmin) {
+    updateFields.isAdmin = true
+  }
+
   await User.updateOne(
     { _id: user._id },
     {
-      $set: { holdingAccount: false },
+      $set: updateFields,
       $addToSet: {
         thirdPartyIdentifiers: {
           providerId: 'clerk',
@@ -200,6 +214,9 @@ async function findOrCreateUser({ email, firstName, lastName, clerkUserId }) {
       },
     }
   ).exec()
+  if (isAdmin) {
+    user.isAdmin = true
+  }
   return user
 }
 
